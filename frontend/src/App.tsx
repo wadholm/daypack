@@ -10,7 +10,7 @@ import { Progress } from './components/Progress';
 import { TopBar } from './components/TopBar';
 import { useI18n } from './i18n/I18nProvider';
 import { countPacked, progressPercent, useChecked } from './state/checked';
-import { useItemList, visibleItems } from './state/items';
+import { editableItems, useItemList, visibleItems } from './state/items';
 
 // 'new' opens the editor for a fresh custom item; a string is the id being edited.
 type EditorTarget = 'new' | string | null;
@@ -61,6 +61,8 @@ export function App() {
   const list = useItemList();
   const { checked, toggle, forget, reset } = useChecked();
   const [editing, setEditing] = useState(false);
+  // Ids on the list when editing began; see editableItems.
+  const [editStart, setEditStart] = useState<ReadonlySet<string>>(new Set());
   const [editorTarget, setEditorTarget] = useState<EditorTarget>(null);
   const [startersOpen, setStartersOpen] = useState(false);
   const [adding, setAdding] = useState(false);
@@ -84,8 +86,7 @@ export function App() {
           <Progress packed={packed} total={visible.length} percent={percent} />
         </header>
         <ItemList
-          // Editing shows hidden items too, so a hide can be undone before Done.
-          items={editing ? list.items : visible}
+          items={editing ? editableItems(list.items, editStart) : visible}
           checked={checked}
           editing={editing}
           onToggle={toggle}
@@ -95,7 +96,10 @@ export function App() {
         <ListActions
           editing={editing}
           onAdd={() => setAdding(true)}
-          onEditList={() => setEditing(true)}
+          onEditList={() => {
+            setEditStart(new Set(visible.map((item) => item.id)));
+            setEditing(true);
+          }}
           onStarters={() => setStartersOpen(true)}
         />
       </div>

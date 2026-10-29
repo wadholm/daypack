@@ -15,6 +15,7 @@ import {
   visibleItems,
   type Item,
   availableItems,
+  editableItems,
   canDelete,
   findByLabel,
   includeItem,
@@ -223,6 +224,21 @@ describe('categories', () => {
   it('lets an edit move an item to another category', () => {
     const next = updateItem(seed, 'diapers', { category: 'other' });
     expect(next[0]?.category).toBe('other');
+  });
+});
+
+describe('editableItems', () => {
+  it('keeps items hidden during the session but not ones hidden before it', () => {
+    const before = setHidden(seed, 'pacifier', true);
+    const startedWith = new Set(visibleItems(before).map((i) => i.id));
+    const during = setHidden(before, 'diapers', true);
+    expect(editableItems(during, startedWith).map((i) => i.id)).toContain('diapers');
+    expect(editableItems(during, startedWith).map((i) => i.id)).not.toContain('pacifier');
+  });
+
+  it('shows items added during the session', () => {
+    const added = includeItem(seed, 'pyjamas');
+    expect(editableItems(added, new Set(seed.map((i) => i.id))).map((i) => i.id)).toContain('pyjamas');
   });
 });
 

@@ -232,6 +232,12 @@ export function hiddenItems(items: readonly Item[]): Item[] {
   return items.filter((item) => item.hidden);
 }
 
+// While editing: the items that were on the list when editing began (even if hidden since, so the
+// hide can be undone) plus anything added meanwhile. Items hidden before the session stay out.
+export function editableItems(items: readonly Item[], startedWith: ReadonlySet<string>): Item[] {
+  return items.filter((item) => !item.hidden || startedWith.has(item.id));
+}
+
 // Everything that could still be added: hidden items plus catalogue entries not on the list yet.
 export function availableItems(items: readonly Item[]): Item[] {
   const present = new Set(items.map((item) => item.id));
