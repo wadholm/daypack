@@ -13,6 +13,11 @@ import {
   updateItem,
   visibleItems,
   type Item,
+  applyTemplate,
+  canDelete,
+  categoryOf,
+  groupByCategory,
+  templateAdditions,
 } from './items';
 
 const seed = defaultItems();
@@ -54,7 +59,7 @@ describe('parseItems', () => {
   });
 
   it('round-trips through serializeItems', () => {
-    const items = addItem(seed, { label: 'Snack box', hue: 'mint', icon: 'snack', note: 'No nuts' });
+    const items = addItem(seed, { label: 'Snack box', hue: 'mint', icon: 'snack', category: 'feeding', note: 'No nuts' });
     expect(parseItems(serializeItems(items))).toEqual(items);
   });
 
@@ -125,7 +130,7 @@ describe('slugify and uniqueId', () => {
 
 describe('addItem', () => {
   it('appends a custom item with a generated id and carried defaults', () => {
-    const items = addItem(seed, { label: '  Towel ', hue: 'sea', icon: 'blanket', note: '' });
+    const items = addItem(seed, { label: '  Towel ', hue: 'sea', icon: 'blanket', category: 'other', note: '' });
     expect(items).toHaveLength(8);
     expect(items[7]).toEqual({
       id: 'towel',
@@ -133,7 +138,7 @@ describe('addItem', () => {
       label: 'Towel',
       hue: 'sea',
       icon: 'blanket',
-      category: null,
+      category: 'other',
       note: '',
       daily: false,
       target: 1,
@@ -144,14 +149,14 @@ describe('addItem', () => {
 
   it('does not mutate the input', () => {
     const before = [...seed];
-    addItem(seed, { label: 'Towel', hue: 'sea', icon: 'blanket', note: '' });
+    addItem(seed, { label: 'Towel', hue: 'sea', icon: 'blanket', category: 'other', note: '' });
     expect(seed).toEqual(before);
   });
 });
 
 describe('updateItem', () => {
   it('patches editable fields and keeps the id stable even when the label changes', () => {
-    const items = addItem(seed, { label: 'Towel', hue: 'sea', icon: 'blanket', note: '' });
+    const items = addItem(seed, { label: 'Towel', hue: 'sea', icon: 'blanket', category: 'other', note: '' });
     const next = updateItem(items, 'towel', { label: 'Beach towel', note: 'Blue one' });
     const towel = next.find((item) => item.id === 'towel');
     expect(towel).toMatchObject({ id: 'towel', label: 'Beach towel', note: 'Blue one' });
@@ -163,7 +168,7 @@ describe('updateItem', () => {
   });
 
   it('ignores a blank label on a custom item', () => {
-    const items = addItem(seed, { label: 'Towel', hue: 'sea', icon: 'blanket', note: '' });
+    const items = addItem(seed, { label: 'Towel', hue: 'sea', icon: 'blanket', category: 'other', note: '' });
     expect(updateItem(items, 'towel', { label: '   ' })).toEqual(items);
   });
 });
@@ -177,12 +182,79 @@ describe('hide, unhide and remove', () => {
   });
 
   it('removes a custom item', () => {
-    const items = addItem(seed, { label: 'Towel', hue: 'sea', icon: 'blanket', note: '' });
+    const items = addItem(seed, { label: 'Towel', hue: 'sea', icon: 'blanket', category: 'other', note: '' });
     expect(removeItem(items, 'towel')).toEqual(seed);
   });
 
   it('refuses to delete a built-in', () => {
     expect(removeItem(seed, 'diapers')).toEqual(seed);
+  });
+});
+
+describe('categories', () => {
+  it('assigns catalogue categories to built-ins and repairs stored ones', () => {
+    expect(seed.map((item) => item.category)).toEqual([
+      'hygiene',
+      'comfort',
+      'comfort',
+      'clothing',
+      'weather',
+      'feeding',
+      'weather',
+    ]);
+    const raw = stored([{ id: 'diapers', builtin: true, category: 'bogus' }, { ...seed[1], category: null }]);
+    expect(parseItems(raw).map((item) => item.category)).toEqual(['hygiene', 'comfort']);
+  });
+
+  it('treats a custom item without a category as other', () => {
+    const raw = stored([{ id: 'towel', builtin: false, label: 'Towel', hue: 'sea', icon: 'star' }]);
+    const [towel] = parseItems(raw);
+    expect(towel?.category).toBeNull();
+    expect(categoryOf(towel!)).toBe('other');
+  });
+
+  it('groups in the fixed category order and keeps list order inside a group', () => {
+    const groups = groupByCategory(seed);
+    expect(groups.map((g) => g.category)).toEqual(['clothing', 'hygiene', 'feeding', 'comfort', 'weather']);
+    expect(groups.find((g) => g.category === 'weather')?.items.map((i) => i.id)).toEqual(['rain-gear', 'sun-hat']);
+  });
+
+  it('lets an edit move an item to another category', () => {
+    const next = updateItem(seed, 'diapers', { category: 'other' });
+    expect(next[0]?.category).toBe('other');
+  });
+});
+
+describe('starter templates', () => {
+  it('adds only what is missing, built-in and without labels', () => {
+    const added = templateAdditions(seed, 'warm').map((item) => item.id);
+    expect(added).toEqual(['wet-wipes', 'socks', 'snack', 'sunscreen']);
+    expect(applyTemplate(seed, 'warm')).toHaveLength(seed.length + 4);
+    expect(templateAdditions(seed, 'warm').every((item) => item.builtin && item.label === null)).toBe(true);
+  });
+
+  it('is idempotent', () => {
+    const once = applyTemplate(seed, 'cold');
+    expect(templateAdditions(once, 'cold')).toEqual([]);
+    expect(applyTemplate(once, 'cold')).toEqual(once);
+  });
+
+  it('does not resurrect an item the user hid', () => {
+    const items = setHidden(seed, 'diapers', true);
+    expect(templateAdditions(items, 'cold').map((i) => i.id)).not.toContain('diapers');
+  });
+
+  it('survives a storage round trip', () => {
+    const items = applyTemplate(seed, 'cold');
+    expect(parseItems(serializeItems(items))).toEqual(items);
+  });
+
+  it('lets template-added built-ins be deleted but not the seeded ones', () => {
+    const items = applyTemplate(seed, 'cold');
+    const socks = items.find((i) => i.id === 'socks')!;
+    expect(canDelete(socks)).toBe(true);
+    expect(removeItem(items, 'socks').map((i) => i.id)).not.toContain('socks');
+    expect(canDelete(items[0]!)).toBe(false);
   });
 });
 

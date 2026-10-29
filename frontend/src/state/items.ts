@@ -1,5 +1,14 @@
 import { useEffect, useState } from 'preact/hooks';
 import { isIconId, type IconId } from '../icons/iconIds';
+import {
+  CATEGORIES,
+  SEED_IDS,
+  TEMPLATE_ITEM_IDS,
+  catalogueEntry,
+  isCategory,
+  type Category,
+  type TemplateId,
+} from './catalogue';
 import { readStorage, writeStorage } from './safeStorage';
 
 export const ITEMS_STORAGE_KEY = 'daypack.items';
@@ -15,8 +24,9 @@ export interface Item {
   label: string | null;
   hue: Hue;
   icon: IconId;
-  // category, daily, target and stock have no UI yet; carried so later slices need no data migration.
-  category: string | null;
+  // daily, target and stock have no UI yet; carried so later slices need no data migration.
+  // null groups under 'other'.
+  category: Category | null;
   note: string;
   daily: boolean;
   target: number;
@@ -28,29 +38,27 @@ export interface ItemDraft {
   label: string;
   hue: Hue;
   icon: IconId;
+  category: Category;
   note: string;
 }
 
-const BUILTINS: readonly { id: string; hue: Hue; icon: IconId }[] = [
-  { id: 'diapers', hue: 'yellow', icon: 'diapers' },
-  { id: 'pacifier', hue: 'sky', icon: 'pacifier' },
-  { id: 'cuddly-toy', hue: 'pink', icon: 'cuddly-toy' },
-  { id: 'spare-clothes', hue: 'mint', icon: 'spare-clothes' },
-  { id: 'rain-gear', hue: 'lavender', icon: 'rain-gear' },
-  { id: 'water-bottle', hue: 'sea', icon: 'water-bottle' },
-  { id: 'sun-hat', hue: 'peach', icon: 'sun-hat' },
-];
-
 const MAX_COUNT = 99;
 
-function baseItem(id: string, builtin: boolean, label: string | null, hue: Hue, icon: IconId): Item {
+function baseItem(
+  id: string,
+  builtin: boolean,
+  label: string | null,
+  hue: Hue,
+  icon: IconId,
+  category: Category | null = null,
+): Item {
   return {
     id,
     builtin,
     label,
     hue,
     icon,
-    category: null,
+    category,
     note: '',
     daily: false,
     target: 1,
@@ -59,8 +67,13 @@ function baseItem(id: string, builtin: boolean, label: string | null, hue: Hue, 
   };
 }
 
+function catalogueItem(id: string): Item | null {
+  const entry = catalogueEntry(id);
+  return entry ? baseItem(entry.id, true, null, entry.hue, entry.icon, entry.category) : null;
+}
+
 export function defaultItems(): Item[] {
-  return BUILTINS.map(({ id, hue, icon }) => baseItem(id, true, null, hue, icon));
+  return SEED_IDS.flatMap((id) => catalogueItem(id) ?? []);
 }
 
 function isHue(value: unknown): value is Hue {
@@ -78,7 +91,7 @@ function parseItem(raw: unknown): Item | null {
   const r = raw as Record<string, unknown>;
   if (typeof r.id !== 'string' || r.id === '') return null;
 
-  const builtin = BUILTINS.find((b) => b.id === r.id);
+  const builtin = catalogueEntry(r.id);
   const label = typeof r.label === 'string' ? r.label.trim() : '';
   if (r.builtin === true && !builtin) return null;
   if (r.builtin !== true && label === '') return null;
@@ -92,7 +105,8 @@ function parseItem(raw: unknown): Item | null {
   );
   return {
     ...base,
-    category: typeof r.category === 'string' ? r.category : null,
+    // Items stored before categories existed fall back to the catalogue's grouping.
+    category: isCategory(r.category) ? r.category : (builtin?.category ?? null),
     note: typeof r.note === 'string' ? r.note : '',
     daily: r.daily === true,
     target: count(r.target, 1),
@@ -150,11 +164,14 @@ export function uniqueId(label: string, items: readonly Item[]): string {
 
 export function addItem(items: readonly Item[], draft: ItemDraft): Item[] {
   const label = draft.label.trim();
-  const item = { ...baseItem(uniqueId(label, items), false, label, draft.hue, draft.icon), note: draft.note };
+  const item = {
+    ...baseItem(uniqueId(label, items), false, label, draft.hue, draft.icon, draft.category),
+    note: draft.note,
+  };
   return [...items, item];
 }
 
-export type ItemPatch = Partial<Pick<Item, 'hue' | 'icon' | 'note'>> & { label?: string };
+export type ItemPatch = Partial<Pick<Item, 'hue' | 'icon' | 'note'>> & { label?: string; category?: Category };
 
 export function updateItem(items: readonly Item[], id: string, patch: ItemPatch): Item[] {
   return items.map((item) => {
@@ -171,8 +188,40 @@ export function setHidden(items: readonly Item[], id: string, hidden: boolean): 
   return items.map((item) => (item.id === id ? { ...item, hidden } : item));
 }
 
+// The seeded built-ins stay (hide them instead); built-ins that arrived through a template can go.
+export function canDelete(item: Item): boolean {
+  return !item.builtin || !SEED_IDS.includes(item.id);
+}
+
 export function removeItem(items: readonly Item[], id: string): Item[] {
-  return items.filter((item) => item.id !== id || item.builtin);
+  return items.filter((item) => item.id !== id || !canDelete(item));
+}
+
+export function categoryOf(item: Item): Category {
+  return item.category ?? 'other';
+}
+
+export interface ItemGroup {
+  category: Category;
+  items: Item[];
+}
+
+// Groups follow the fixed category order; items keep their list order inside a group.
+export function groupByCategory(items: readonly Item[]): ItemGroup[] {
+  return CATEGORIES.map((category) => ({
+    category,
+    items: items.filter((item) => categoryOf(item) === category),
+  })).filter((group) => group.items.length > 0);
+}
+
+// Hidden items count as present, so a template never resurrects something the user hid.
+export function templateAdditions(items: readonly Item[], template: TemplateId): Item[] {
+  const present = new Set(items.map((item) => item.id));
+  return TEMPLATE_ITEM_IDS[template].flatMap((id) => (present.has(id) ? [] : (catalogueItem(id) ?? [])));
+}
+
+export function applyTemplate(items: readonly Item[], template: TemplateId): Item[] {
+  return [...items, ...templateAdditions(items, template)];
 }
 
 export function visibleItems(items: readonly Item[]): Item[] {
@@ -189,6 +238,7 @@ export function useItemList(): {
   update: (id: string, patch: ItemPatch) => void;
   hide: (id: string, hidden: boolean) => void;
   remove: (id: string) => void;
+  addTemplate: (template: TemplateId) => void;
 } {
   const [items, setItems] = useState<readonly Item[]>(() => parseItems(readStorage(ITEMS_STORAGE_KEY)));
 
@@ -202,5 +252,6 @@ export function useItemList(): {
     update: (id, patch) => setItems((current) => updateItem(current, id, patch)),
     hide: (id, hidden) => setItems((current) => setHidden(current, id, hidden)),
     remove: (id) => setItems((current) => removeItem(current, id)),
+    addTemplate: (template) => setItems((current) => applyTemplate(current, template)),
   };
 }

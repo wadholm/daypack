@@ -11,6 +11,7 @@ Look: cozy, modern Scandinavian. A cool lavender-grey base with a soft lilac, ba
 - **Date** (e.g. "Thursday 29 October"), then the **title on ONE line** (never wraps).
 - **Counter row:** "2 of 7 packed" left, "29%" right in muted, then a 10px rounded progress bar.
 - **List:** ONE white card (radius 24, 16px side margin) with rows separated by 1px dividers, no gaps between rows. Each row: round pastel icon tile (38px) → label → round checkbox (30px).
+- **Category headings:** inside the list card, each group starts with a 15px / 700 muted heading (20px side padding, 16px above, 4px below); rows keep their dividers inside a group.
 - **Reset:** fixed bottom, 16px side margins, 60px tall, radius 18 (not a pill), 34px + safe-area-inset-bottom below it, with a fade from the background behind it.
 
 ## Color tokens

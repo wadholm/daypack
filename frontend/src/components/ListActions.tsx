@@ -1,8 +1,8 @@
-import { css } from '../../styled-system/css';
+import { css, cx } from '../../styled-system/css';
 import { useI18n } from '../i18n/I18nProvider';
 import { iconProps } from '../icons/svgProps';
 
-const barStyle = css({ display: 'flex', gap: '3', paddingInline: '4', paddingTop: '4' });
+const barStyle = css({ display: 'flex', flexWrap: 'wrap', gap: '3', paddingInline: '4', paddingTop: '4' });
 
 const buttonStyle = css({
   flex: '1',
@@ -22,15 +22,18 @@ const buttonStyle = css({
   cursor: 'pointer',
 });
 
+const wideStyle = css({ flexBasis: 'full' });
+
 const plusStyle = css({ width: 'icon', height: 'icon' });
 
 interface ListActionsProps {
   editing: boolean;
   onAdd: () => void;
   onEditList: () => void;
+  onStarters: () => void;
 }
 
-export function ListActions({ editing, onAdd, onEditList }: ListActionsProps) {
+export function ListActions({ editing, onAdd, onEditList, onStarters }: ListActionsProps) {
   const { t } = useI18n();
 
   return (
@@ -46,6 +49,9 @@ export function ListActions({ editing, onAdd, onEditList }: ListActionsProps) {
           {t('editList')}
         </button>
       )}
+      <button type="button" class={cx(buttonStyle, wideStyle)} onClick={onStarters}>
+        {t('starterLists')}
+      </button>
     </div>
   );
 }

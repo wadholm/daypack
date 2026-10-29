@@ -5,6 +5,7 @@ import { HiddenItems } from './components/HiddenItems';
 import { ItemEditor } from './components/ItemEditor';
 import { ItemList } from './components/ItemList';
 import { ListActions } from './components/ListActions';
+import { StarterLists } from './components/StarterLists';
 import { Progress } from './components/Progress';
 import { TopBar } from './components/TopBar';
 import { useI18n } from './i18n/I18nProvider';
@@ -61,6 +62,7 @@ export function App() {
   const { checked, toggle, forget, reset } = useChecked();
   const [editing, setEditing] = useState(false);
   const [editorTarget, setEditorTarget] = useState<EditorTarget>(null);
+  const [startersOpen, setStartersOpen] = useState(false);
 
   const visible = visibleItems(list.items);
   const packed = countPacked(visible.map((item) => item.id), checked);
@@ -79,13 +81,28 @@ export function App() {
           <Progress packed={packed} total={visible.length} percent={percent} />
         </header>
         <ItemList items={visible} checked={checked} editing={editing} onToggle={toggle} onEdit={setEditorTarget} />
-        <ListActions editing={editing} onAdd={() => setEditorTarget('new')} onEditList={() => setEditing(true)} />
+        <ListActions
+          editing={editing}
+          onAdd={() => setEditorTarget('new')}
+          onEditList={() => setEditing(true)}
+          onStarters={() => setStartersOpen(true)}
+        />
         {editing && <HiddenItems items={hiddenItems(list.items)} onShow={(id) => list.hide(id, false)} />}
       </div>
       <BottomBar
         label={editing ? t('done') : t('reset')}
         onPress={editing ? () => setEditing(false) : reset}
       />
+      {startersOpen && (
+        <StarterLists
+          items={list.items}
+          onPick={(template) => {
+            list.addTemplate(template);
+            setStartersOpen(false);
+          }}
+          onClose={() => setStartersOpen(false)}
+        />
+      )}
       {editorTarget !== null && (
         <ItemEditor
           // Remount per target so the form fields reset.

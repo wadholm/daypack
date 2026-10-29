@@ -100,7 +100,7 @@ Step 1 above is the shipped baseline. The MVP targets our own household (mom, da
 ## MVP slices (build in order, each shippable)
 
 - [x] 1. Editable items, local first: item model gains `label`, `hue`, `icon`, `category`, `note`, `daily`, `target`, `stock`, `hidden`; add/edit/hide/delete UI; custom ids are generated slugs and custom labels are user text; replaces the hard-coded seed and `GET /api/items` (endpoint removed; items live in `daypack.items` in localStorage, built-in labels stay in the translation files, `daypack.checked` is unchanged)
-- [ ] 2. Categories and starter templates: list grouped by category; a general baby-items catalogue with warm and cold templates, bilingual in the translation files
+- [x] 2. Categories and starter templates: list grouped by category (clothing, hygiene, feeding, comfort, weather, other; items with no category show under other; editable per item); a 16-entry catalogue (`state/catalogue.ts`) with warm and cold templates, labels bilingual in the translation files. A template adds only catalogue items not already on the list (hidden ones count as present). Template-added built-ins can be deleted; the seeded seven can only be hidden
 - [ ] 3. Daycare view and derived packing list: Pack and At daycare views; editing stock or target recomputes the pack list
 - [ ] 4. Shared household state: persistent store in the Worker (D1 recommended), household create/join, items, stock and checked state; client syncs on focus or by polling with localStorage as offline cache; last write wins per item; update this spec and CLAUDE.md to drop "stateless"
 - [ ] 5. Multiple children or lists: a household has several lists, switcher in the top bar
