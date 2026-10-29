@@ -9,6 +9,8 @@ import { actionsStyle, buttonStyle, dialogStyle, formStyle, headingStyle } from 
 const TEMPLATE_KEYS: Record<TemplateId, TranslationKey> = {
   warm: 'starter_warm',
   cold: 'starter_cold',
+  overnight: 'starter_overnight',
+  swim: 'starter_swim',
 };
 
 const introStyle = css({ margin: '0', color: 'textMuted', fontSize: 'meta', fontWeight: 'semibold' });

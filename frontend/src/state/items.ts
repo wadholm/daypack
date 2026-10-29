@@ -91,7 +91,8 @@ function parseItem(raw: unknown): Item | null {
   const r = raw as Record<string, unknown>;
   if (typeof r.id !== 'string' || r.id === '') return null;
 
-  const builtin = catalogueEntry(r.id);
+  // Only real built-ins take catalogue defaults; a custom item may share an id-like name.
+  const builtin = r.builtin === true ? catalogueEntry(r.id) : undefined;
   const label = typeof r.label === 'string' ? r.label.trim() : '';
   if (r.builtin === true && !builtin) return null;
   if (r.builtin !== true && label === '') return null;
@@ -153,12 +154,14 @@ export function slugify(label: string): string {
 }
 
 // Checks every id, hidden ones included, so a hidden item's persisted state is never reused.
+// Catalogue ids are reserved so a custom item never collides with a template item added later.
 export function uniqueId(label: string, items: readonly Item[]): string {
   const taken = new Set(items.map((item) => item.id));
+  const isTaken = (id: string) => taken.has(id) || catalogueEntry(id) !== undefined;
   const slug = slugify(label);
-  if (!taken.has(slug)) return slug;
+  if (!isTaken(slug)) return slug;
   let n = 2;
-  while (taken.has(`${slug}-${n}`)) n += 1;
+  while (isTaken(`${slug}-${n}`)) n += 1;
   return `${slug}-${n}`;
 }
 

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { SEED_IDS, TEMPLATES, TEMPLATE_ITEM_IDS, catalogueEntry } from './catalogue';
 import { countPacked } from './checked';
 import {
   addItem,
@@ -32,7 +33,7 @@ describe('defaultItems', () => {
       ['diapers', 'yellow'],
       ['pacifier', 'sky'],
       ['cuddly-toy', 'pink'],
-      ['spare-clothes', 'mint'],
+      ['socks', 'pink'],
       ['rain-gear', 'lavender'],
       ['water-bottle', 'sea'],
       ['sun-hat', 'peach'],
@@ -124,18 +125,18 @@ describe('slugify and uniqueId', () => {
     ];
     expect(uniqueId('Snack', items)).toBe('snack-2');
     expect(uniqueId('Diapers', items)).toBe('diapers-2');
-    expect(uniqueId('Towel', items)).toBe('towel');
+    expect(uniqueId('Rattle', items)).toBe('rattle');
   });
 });
 
 describe('addItem', () => {
   it('appends a custom item with a generated id and carried defaults', () => {
-    const items = addItem(seed, { label: '  Towel ', hue: 'sea', icon: 'blanket', category: 'other', note: '' });
+    const items = addItem(seed, { label: '  Rattle ', hue: 'sea', icon: 'blanket', category: 'other', note: '' });
     expect(items).toHaveLength(8);
     expect(items[7]).toEqual({
-      id: 'towel',
+      id: 'rattle',
       builtin: false,
-      label: 'Towel',
+      label: 'Rattle',
       hue: 'sea',
       icon: 'blanket',
       category: 'other',
@@ -149,17 +150,17 @@ describe('addItem', () => {
 
   it('does not mutate the input', () => {
     const before = [...seed];
-    addItem(seed, { label: 'Towel', hue: 'sea', icon: 'blanket', category: 'other', note: '' });
+    addItem(seed, { label: 'Rattle', hue: 'sea', icon: 'blanket', category: 'other', note: '' });
     expect(seed).toEqual(before);
   });
 });
 
 describe('updateItem', () => {
   it('patches editable fields and keeps the id stable even when the label changes', () => {
-    const items = addItem(seed, { label: 'Towel', hue: 'sea', icon: 'blanket', category: 'other', note: '' });
-    const next = updateItem(items, 'towel', { label: 'Beach towel', note: 'Blue one' });
-    const towel = next.find((item) => item.id === 'towel');
-    expect(towel).toMatchObject({ id: 'towel', label: 'Beach towel', note: 'Blue one' });
+    const items = addItem(seed, { label: 'Rattle', hue: 'sea', icon: 'blanket', category: 'other', note: '' });
+    const next = updateItem(items, 'rattle', { label: 'Beach rattle', note: 'Blue one' });
+    const rattle = next.find((item) => item.id === 'rattle');
+    expect(rattle).toMatchObject({ id: 'rattle', label: 'Beach rattle', note: 'Blue one' });
   });
 
   it('never gives a built-in a label', () => {
@@ -168,8 +169,8 @@ describe('updateItem', () => {
   });
 
   it('ignores a blank label on a custom item', () => {
-    const items = addItem(seed, { label: 'Towel', hue: 'sea', icon: 'blanket', category: 'other', note: '' });
-    expect(updateItem(items, 'towel', { label: '   ' })).toEqual(items);
+    const items = addItem(seed, { label: 'Rattle', hue: 'sea', icon: 'blanket', category: 'other', note: '' });
+    expect(updateItem(items, 'rattle', { label: '   ' })).toEqual(items);
   });
 });
 
@@ -182,8 +183,8 @@ describe('hide, unhide and remove', () => {
   });
 
   it('removes a custom item', () => {
-    const items = addItem(seed, { label: 'Towel', hue: 'sea', icon: 'blanket', category: 'other', note: '' });
-    expect(removeItem(items, 'towel')).toEqual(seed);
+    const items = addItem(seed, { label: 'Rattle', hue: 'sea', icon: 'blanket', category: 'other', note: '' });
+    expect(removeItem(items, 'rattle')).toEqual(seed);
   });
 
   it('refuses to delete a built-in', () => {
@@ -207,10 +208,10 @@ describe('categories', () => {
   });
 
   it('treats a custom item without a category as other', () => {
-    const raw = stored([{ id: 'towel', builtin: false, label: 'Towel', hue: 'sea', icon: 'star' }]);
-    const [towel] = parseItems(raw);
-    expect(towel?.category).toBeNull();
-    expect(categoryOf(towel!)).toBe('other');
+    const raw = stored([{ id: 'rattle', builtin: false, label: 'Rattle', hue: 'sea', icon: 'star' }]);
+    const [rattle] = parseItems(raw);
+    expect(rattle?.category).toBeNull();
+    expect(categoryOf(rattle!)).toBe('other');
   });
 
   it('groups in the fixed category order and keeps list order inside a group', () => {
@@ -228,7 +229,14 @@ describe('categories', () => {
 describe('weather templates', () => {
   it('turning on adds the missing items as label-less built-ins and keeps the seed', () => {
     const next = setTemplate(seed, 'warm', true);
-    expect(next.map((i) => i.id)).toEqual([...seed.map((i) => i.id), 'shirt', 'shorts', 'sunscreen']);
+    expect(next.map((i) => i.id)).toEqual([
+      ...seed.map((i) => i.id),
+      'shirt',
+      'shorts',
+      'sunscreen',
+      'uv-clothes',
+      'sunglasses',
+    ]);
     expect(next.slice(seed.length).every((i) => i.builtin && i.label === null && !i.hidden)).toBe(true);
     expect(templateActive(next, 'warm')).toBe(true);
     expect(templateActive(next, 'cold')).toBe(false);
@@ -243,11 +251,11 @@ describe('weather templates', () => {
   });
 
   it('turning off hides rather than deletes, so notes survive', () => {
-    const items = updateItem(setTemplate(seed, 'cold', true), 'socks', { note: 'Wool' });
+    const items = updateItem(setTemplate(seed, 'cold', true), 'pants', { note: 'Wool' });
     const off = setTemplate(items, 'cold', false);
     expect(off).toHaveLength(items.length);
-    expect(hiddenItems(off).map((i) => i.id)).toContain('socks');
-    expect(setTemplate(off, 'cold', true).find((i) => i.id === 'socks')?.note).toBe('Wool');
+    expect(hiddenItems(off).map((i) => i.id)).toContain('pants');
+    expect(setTemplate(off, 'cold', true).find((i) => i.id === 'pants')?.note).toBe('Wool');
   });
 
   it('only touches its own items, so the other weather and the rest stay visible', () => {
@@ -258,9 +266,29 @@ describe('weather templates', () => {
   });
 
   it('a template whose item was deleted is off until turned on again', () => {
-    const items = removeItem(setTemplate(seed, 'cold', true), 'socks');
+    const items = removeItem(setTemplate(seed, 'cold', true), 'pants');
     expect(templateActive(items, 'cold')).toBe(false);
     expect(templateActive(setTemplate(items, 'cold', true), 'cold')).toBe(true);
+  });
+
+  it('keeps the four lists disjoint and only made of catalogue items', () => {
+    const all = TEMPLATES.flatMap((template) => TEMPLATE_ITEM_IDS[template]);
+    expect(new Set(all).size).toBe(all.length);
+    expect(all.every((id) => catalogueEntry(id) !== undefined)).toBe(true);
+    expect(all.some((id) => SEED_IDS.includes(id) && id !== 'rain-gear' && id !== 'sun-hat')).toBe(false);
+  });
+
+  it('keeps swimming separate from the overnight list', () => {
+    const overnight = setTemplate(seed, 'overnight', true);
+    expect(templateActive(overnight, 'swim')).toBe(false);
+    expect(overnight.map((i) => i.id)).toEqual(expect.arrayContaining(['pyjamas', 'toothbrush', 'night-light']));
+    expect(overnight.map((i) => i.id)).not.toContain('towel');
+  });
+
+  it('reserves catalogue ids so a custom item never shadows a template item', () => {
+    const custom = addItem(seed, { label: 'Towel', hue: 'sea', icon: 'star', category: 'other', note: '' });
+    expect(custom.at(-1)?.id).toBe('towel-2');
+    expect(templateActive(setTemplate(custom, 'swim', true), 'swim')).toBe(true);
   });
 
   it('survives a storage round trip', () => {
@@ -270,9 +298,9 @@ describe('weather templates', () => {
 
   it('lets template-added built-ins be deleted but not the seeded ones', () => {
     const items = setTemplate(seed, 'cold', true);
-    const socks = items.find((i) => i.id === 'socks')!;
-    expect(canDelete(socks)).toBe(true);
-    expect(removeItem(items, 'socks').map((i) => i.id)).not.toContain('socks');
+    const pants = items.find((i) => i.id === 'pants')!;
+    expect(canDelete(pants)).toBe(true);
+    expect(removeItem(items, 'pants').map((i) => i.id)).not.toContain('pants');
     expect(canDelete(items[0]!)).toBe(false);
   });
 });
