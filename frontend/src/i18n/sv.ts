@@ -59,4 +59,6 @@ export const sv: Dictionary = {
   icon_socks: 'Strumpor',
   icon_snack: 'Mellanmål',
   icon_blanket: 'Filt',
+  icon_shoe: 'Sko',
+  icon_beanie: 'Mössa',
 };

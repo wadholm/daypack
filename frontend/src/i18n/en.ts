@@ -58,6 +58,8 @@ export const en = {
   icon_socks: 'Socks',
   icon_snack: 'Snack',
   icon_blanket: 'Blanket',
+  icon_shoe: 'Shoe',
+  icon_beanie: 'Beanie',
 };
 
 export type Dictionary = { [K in keyof typeof en]: string };

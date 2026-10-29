@@ -13,6 +13,8 @@ export const ICON_IDS = [
   'socks',
   'snack',
   'blanket',
+  'shoe',
+  'beanie',
 ] as const;
 
 export type IconId = (typeof ICON_IDS)[number];

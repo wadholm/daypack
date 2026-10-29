@@ -73,6 +73,19 @@ const ICON_PATHS: Record<IconId, JSX.Element> = {
       <path d="M3 9h18M8 9v10M13 9v10" />
     </>
   ),
+  shoe: (
+    <>
+      <path d="M4 5h5v6c0 1.2 1 2 2.2 2H15c3 0 5 1.5 5 4v1H4z" />
+      <path d="M9 8h3M9 11h2" />
+    </>
+  ),
+  beanie: (
+    <>
+      <path d="M5 15a7 7 0 0 1 14 0z" />
+      <path d="M4 15h16v3.5H4z" />
+      <circle cx="12" cy="5" r="1.8" />
+    </>
+  ),
 };
 
 export function ItemIcon({ id }: { id: IconId }) {

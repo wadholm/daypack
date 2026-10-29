@@ -31,6 +31,8 @@ const ICON_KEYS: Record<IconId, TranslationKey> = {
   socks: 'icon_socks',
   snack: 'icon_snack',
   blanket: 'icon_blanket',
+  shoe: 'icon_shoe',
+  beanie: 'icon_beanie',
 };
 
 const groupStyle = css({ display: 'flex', flexWrap: 'wrap', gap: '2' });
