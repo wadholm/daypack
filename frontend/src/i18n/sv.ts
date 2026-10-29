@@ -68,6 +68,7 @@ export const sv: Dictionary = {
   nothingToAdd: 'Allt vi känner till finns redan i listan.',
   createNewItem: 'Skapa en ny sak',
   createItem: 'Skapa {name}',
+  showItemLabel: 'Visa {name} i listan',
   hideItemLabel: 'Dölj {name} från listan',
   showMore: 'Visa {count} till',
   newItem: 'Ny sak',

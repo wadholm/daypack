@@ -67,6 +67,7 @@ export const en = {
   nothingToAdd: 'Everything we know is already on your list.',
   createNewItem: 'Create a new item',
   createItem: 'Create {name}',
+  showItemLabel: 'Show {name} in the list',
   hideItemLabel: 'Hide {name} from the list',
   showMore: 'Show {count} more',
   newItem: 'New item',

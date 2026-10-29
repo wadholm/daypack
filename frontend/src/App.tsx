@@ -84,12 +84,13 @@ export function App() {
           <Progress packed={packed} total={visible.length} percent={percent} />
         </header>
         <ItemList
-          items={visible}
+          // Editing shows hidden items too, so a hide can be undone before Done.
+          items={editing ? list.items : visible}
           checked={checked}
           editing={editing}
           onToggle={toggle}
           onEdit={setEditorTarget}
-          onHide={(id) => list.hide(id, true)}
+          onSetHidden={list.hide}
         />
         <ListActions
           editing={editing}
