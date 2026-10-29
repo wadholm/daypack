@@ -23,9 +23,9 @@ const optionStyle = css({
   gap: '3',
   paddingInline: '4',
   textAlign: 'start',
+  // Needs the attribute selector to outrank the base button's bg and color.
+  '&[aria-checked=true]': { bg: 'brand', color: 'onBrand' },
 });
-
-const onStyle = css({ bg: 'brand', color: 'onBrand' });
 
 const optionLabelStyle = css({ fontSize: 'label', fontWeight: 'semibold' });
 
@@ -69,7 +69,7 @@ export function StarterLists({ items, onToggle, onClose }: StarterListsProps) {
               type="button"
               role="switch"
               aria-checked={active}
-              class={cx(buttonStyle, optionStyle, active && onStyle)}
+              class={cx(buttonStyle, optionStyle)}
               onClick={() => onToggle(template, !active)}
             >
               <span class={optionLabelStyle}>{t(TEMPLATE_KEYS[template])}</span>
