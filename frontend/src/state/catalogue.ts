@@ -77,16 +77,9 @@ export function catalogueEntry(id: string): CatalogueEntry | undefined {
   return BY_ID.get(id);
 }
 
-// What a fresh install starts with; the other catalogue entries arrive through templates.
-export const SEED_IDS: readonly string[] = [
-  'diapers',
-  'pacifier',
-  'cuddly-toy',
-  'socks',
-  'rain-gear',
-  'water-bottle',
-  'sun-hat',
-];
+// What a fresh install starts with: everyday items only. Weather-dependent items such as rain gear and
+// the sun hat arrive with their starter list instead of cluttering every day.
+export const SEED_IDS: readonly string[] = ['diapers', 'pacifier', 'cuddly-toy', 'socks', 'water-bottle'];
 
 // Each template owns its items and none overlap, so switching one off never hides what another needs.
 // Everyday items (diapers, socks, water bottle) stay out of every template for the same reason.

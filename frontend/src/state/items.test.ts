@@ -28,15 +28,13 @@ function stored(items: unknown): string {
 }
 
 describe('defaultItems', () => {
-  it('seeds the seven built-ins with the ids and hues from the spec', () => {
+  it('seeds the five everyday built-ins', () => {
     expect(seed.map((item) => [item.id, item.hue])).toEqual([
       ['diapers', 'yellow'],
       ['pacifier', 'sky'],
       ['cuddly-toy', 'pink'],
       ['socks', 'pink'],
-      ['rain-gear', 'lavender'],
       ['water-bottle', 'sea'],
-      ['sun-hat', 'peach'],
     ]);
     expect(seed.every((item) => item.builtin && item.label === null && !item.hidden)).toBe(true);
   });
@@ -132,8 +130,8 @@ describe('slugify and uniqueId', () => {
 describe('addItem', () => {
   it('appends a custom item with a generated id and carried defaults', () => {
     const items = addItem(seed, { label: '  Rattle ', hue: 'sea', icon: 'blanket', category: 'other', note: '' });
-    expect(items).toHaveLength(8);
-    expect(items[7]).toEqual({
+    expect(items).toHaveLength(6);
+    expect(items[5]).toEqual({
       id: 'rattle',
       builtin: false,
       label: 'Rattle',
@@ -199,9 +197,7 @@ describe('categories', () => {
       'comfort',
       'comfort',
       'clothing',
-      'weather',
       'feeding',
-      'weather',
     ]);
     const raw = stored([{ id: 'diapers', builtin: true, category: 'bogus' }, { ...seed[1], category: null }]);
     expect(parseItems(raw).map((item) => item.category)).toEqual(['hygiene', 'comfort']);
@@ -216,8 +212,8 @@ describe('categories', () => {
 
   it('groups in the fixed category order and keeps list order inside a group', () => {
     const groups = groupByCategory(seed);
-    expect(groups.map((g) => g.category)).toEqual(['clothing', 'hygiene', 'feeding', 'comfort', 'weather']);
-    expect(groups.find((g) => g.category === 'weather')?.items.map((i) => i.id)).toEqual(['rain-gear', 'sun-hat']);
+    expect(groups.map((g) => g.category)).toEqual(['clothing', 'hygiene', 'feeding', 'comfort']);
+    expect(groups.find((g) => g.category === 'comfort')?.items.map((i) => i.id)).toEqual(['pacifier', 'cuddly-toy']);
   });
 
   it('lets an edit move an item to another category', () => {
@@ -233,6 +229,7 @@ describe('weather templates', () => {
       ...seed.map((i) => i.id),
       'shirt',
       'shorts',
+      'sun-hat',
       'sunscreen',
       'uv-clothes',
       'sunglasses',
@@ -275,7 +272,7 @@ describe('weather templates', () => {
     const all = TEMPLATES.flatMap((template) => TEMPLATE_ITEM_IDS[template]);
     expect(new Set(all).size).toBe(all.length);
     expect(all.every((id) => catalogueEntry(id) !== undefined)).toBe(true);
-    expect(all.some((id) => SEED_IDS.includes(id) && id !== 'rain-gear' && id !== 'sun-hat')).toBe(false);
+    expect(all.some((id) => SEED_IDS.includes(id))).toBe(false);
   });
 
   it('keeps swimming separate from the overnight list', () => {
@@ -307,7 +304,7 @@ describe('weather templates', () => {
 
 describe('migration of existing checked state', () => {
   it('keeps legacy daypack.checked ids working against the seeded list', () => {
-    const legacyChecked = new Set(['diapers', 'sun-hat']);
+    const legacyChecked = new Set(['diapers', 'socks']);
     const ids = visibleItems(parseItems(null)).map((item: Item) => item.id);
     expect(countPacked(ids, legacyChecked)).toBe(2);
   });
@@ -315,7 +312,7 @@ describe('migration of existing checked state', () => {
   it('does not count hidden items toward progress', () => {
     const items = setHidden(seed, 'diapers', true);
     const ids = visibleItems(items).map((item) => item.id);
-    expect(countPacked(ids, new Set(['diapers', 'sun-hat']))).toBe(1);
-    expect(ids).toHaveLength(6);
+    expect(countPacked(ids, new Set(['diapers', 'socks']))).toBe(1);
+    expect(ids).toHaveLength(4);
   });
 });
