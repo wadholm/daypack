@@ -28,7 +28,7 @@ A mobile-first utility for parents packing a toddler's nursery bag in the hallwa
 - Switching language never loses checked state.
 
 ### 5. Backend
-- Hono on Cloudflare Workers; `GET /api/items?lang=en|sv` per the contract below.
+- Hono on Cloudflare Workers; `GET /api/items?lang=en|sv` per the contract below (removed in MVP slice 1; see the MVP section).
 
 ## Non-goals (Step 1)
 
@@ -55,7 +55,7 @@ Seed (id → hue → en / sv):
 | water-bottle | sea | Water bottle | Vattenflaska |
 | sun-hat | peach | Sun hat | Solhatt |
 
-Icons are chosen on the frontend by item id (hand-written inline SVGs); the API does not send icons.
+(Slice 1 supersedes this: items are stored client-side.) Icons are chosen on the frontend by item id (hand-written inline SVGs); the API does not send icons.
 
 localStorage keys: `daypack.checked` (JSON array of ids), `daypack.theme`, `daypack.lang`. All reads are wrapped in try/catch and validated.
 
@@ -85,3 +85,35 @@ Live: https://daypack.wadholm.workers.dev (workers.dev subdomain `wadholm`, Work
 - [x] 9. Wire the UI to `/api/items`, keep state across language switches
 - [x] 10. Single-Worker build and deploy
 - [x] 11. Final gate: lint, typecheck, test, build
+
+# Daypack MVP
+
+Step 1 above is the shipped baseline. The MVP targets our own household (mom, dad, a grandparent), not a public launch. The Step 1 non-goals and the "stateless Worker" statements apply until MVP slice 4 lands; that slice adds persistent storage and replaces them.
+
+## MVP decisions
+
+- **Sharing:** invite link or code, no passwords. A device token in localStorage is the identity; anyone with the link can edit. The link is a bearer secret: long, unguessable, regenerable.
+- **Daycare model:** each item has a `target` (wanted at daycare) and a `stock` (currently at daycare). To pack = `max(0, target - stock)`. Items flagged `daily` (pacifier, water bottle) are always packed.
+- **Weather:** warm and cold starter templates added in one tap. No forecast lookup.
+- **Extra info:** an optional free-text `note` per item. Photos are deferred.
+
+## MVP slices (build in order, each shippable)
+
+- [x] 1. Editable items, local first: item model gains `label`, `hue`, `icon`, `category`, `note`, `daily`, `target`, `stock`, `hidden`; add/edit/hide/delete UI; custom ids are generated slugs and custom labels are user text; replaces the hard-coded seed and `GET /api/items` (endpoint removed; items live in `daypack.items` in localStorage, built-in labels stay in the translation files, `daypack.checked` is unchanged)
+- [ ] 2. Categories and starter templates: list grouped by category; a general baby-items catalogue with warm and cold templates, bilingual in the translation files
+- [ ] 3. Daycare view and derived packing list: Pack and At daycare views; editing stock or target recomputes the pack list
+- [ ] 4. Shared household state: persistent store in the Worker (D1 recommended), household create/join, items, stock and checked state; client syncs on focus or by polling with localStorage as offline cache; last write wins per item; update this spec and CLAUDE.md to drop "stateless"
+- [ ] 5. Multiple children or lists: a household has several lists, switcher in the top bar
+- [ ] 6. PWA and offline: manifest, icons, service worker caching the shell and last list, queued offline writes replayed on reconnect
+- [ ] 7. Morning reminder notification: Web Push (VAPID) with a Worker cron trigger, per-device opt-in and time; iOS needs the PWA installed (16.4+)
+
+## Out of MVP
+
+Photo upload, live weather forecast, real accounts or OAuth, native app, additional languages.
+
+## Open questions
+
+- Web Push on Workers needs VAPID signing; confirm WebCrypto is enough or ask before adding a dependency.
+- D1 free-plan limits, and whether household data needs export or backup.
+- "New day" semantics: whether packing an item adds to daycare stock. Decide in slice 3.
+- Manual Reset stays; automatic morning reset is not in scope.
