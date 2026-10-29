@@ -3,7 +3,7 @@
 Mobile-first nursery packing list for parents (one-handed use). See [SPEC.md](SPEC.md) for scope and [DESIGN.md](DESIGN.md) for all styling.
 
 ## Stack
-Preact + Vite + TypeScript (`/frontend`), Panda CSS, Hono on Cloudflare Workers (`/backend`), npm workspaces. One Worker serves the built frontend (static assets, SPA fallback) and the API under `/api`. State lives in localStorage; the Worker is stateless.
+Preact + Vite + TypeScript (`/frontend`), Panda CSS, Hono on Cloudflare Workers (`/backend`), npm workspaces. One Worker serves the built frontend (static assets, SPA fallback) and the API under `/api`. State lives in localStorage; the Worker is stateless until MVP slice 4 (see SPEC.md) adds a shared household store.
 
 ## Layout
 - `frontend/` Vite app: `src/components`, `src/i18n` (`en.ts`, `sv.ts`), `src/state`, `src/icons`
