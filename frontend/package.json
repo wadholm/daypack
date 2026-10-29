@@ -1,0 +1,24 @@
+{
+  "name": "@daypack/frontend",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "preact": "^11.1.0"
+  },
+  "devDependencies": {
+    "@pandacss/dev": "^2.4.0",
+    "@pandacss/preset-base": "^2.4.0",
+    "@pandacss/preset-panda": "^2.4.0",
+    "@pandacss/vite": "^2.4.0",
+    "@preact/preset-vite": "^2.10.6",
+    "vite": "^8.3.5"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "prepare": "panda codegen",
+    "typecheck": "tsc -p .",
+    "test": "vitest run"
+  }
+}

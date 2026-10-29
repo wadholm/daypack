@@ -1,0 +1,17 @@
+{
+  "name": "@daypack/backend",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev --config ../wrangler.jsonc",
+    "types": "wrangler types --config ../wrangler.jsonc",
+    "typecheck": "tsc -p .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "hono": "^4.13.14"
+  },
+  "devDependencies": {
+    "wrangler": "^4.155.0"
+  }
+}
