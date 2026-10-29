@@ -13,11 +13,11 @@ import {
   updateItem,
   visibleItems,
   type Item,
-  applyTemplate,
   canDelete,
   categoryOf,
   groupByCategory,
-  templateAdditions,
+  setTemplate,
+  templateActive,
 } from './items';
 
 const seed = defaultItems();
@@ -225,32 +225,51 @@ describe('categories', () => {
   });
 });
 
-describe('starter templates', () => {
-  it('adds only what is missing, built-in and without labels', () => {
-    const added = templateAdditions(seed, 'warm').map((item) => item.id);
-    expect(added).toEqual(['wet-wipes', 'socks', 'snack', 'sunscreen']);
-    expect(applyTemplate(seed, 'warm')).toHaveLength(seed.length + 4);
-    expect(templateAdditions(seed, 'warm').every((item) => item.builtin && item.label === null)).toBe(true);
+describe('weather templates', () => {
+  it('turning on adds the missing items as label-less built-ins and keeps the seed', () => {
+    const next = setTemplate(seed, 'warm', true);
+    expect(next.map((i) => i.id)).toEqual([...seed.map((i) => i.id), 'shirt', 'shorts', 'sunscreen']);
+    expect(next.slice(seed.length).every((i) => i.builtin && i.label === null && !i.hidden)).toBe(true);
+    expect(templateActive(next, 'warm')).toBe(true);
+    expect(templateActive(next, 'cold')).toBe(false);
   });
 
-  it('is idempotent', () => {
-    const once = applyTemplate(seed, 'cold');
-    expect(templateAdditions(once, 'cold')).toEqual([]);
-    expect(applyTemplate(once, 'cold')).toEqual(once);
+  it('turning on is idempotent and unhides items that were hidden', () => {
+    const once = setTemplate(seed, 'cold', true);
+    expect(setTemplate(once, 'cold', true)).toEqual(once);
+    const off = setTemplate(once, 'cold', false);
+    expect(templateActive(off, 'cold')).toBe(false);
+    expect(setTemplate(off, 'cold', true)).toEqual(once);
   });
 
-  it('does not resurrect an item the user hid', () => {
-    const items = setHidden(seed, 'diapers', true);
-    expect(templateAdditions(items, 'cold').map((i) => i.id)).not.toContain('diapers');
+  it('turning off hides rather than deletes, so notes survive', () => {
+    const items = updateItem(setTemplate(seed, 'cold', true), 'socks', { note: 'Wool' });
+    const off = setTemplate(items, 'cold', false);
+    expect(off).toHaveLength(items.length);
+    expect(hiddenItems(off).map((i) => i.id)).toContain('socks');
+    expect(setTemplate(off, 'cold', true).find((i) => i.id === 'socks')?.note).toBe('Wool');
+  });
+
+  it('only touches its own items, so the other weather and the rest stay visible', () => {
+    const both = setTemplate(setTemplate(seed, 'warm', true), 'cold', true);
+    const coldOff = setTemplate(both, 'cold', false);
+    expect(templateActive(coldOff, 'warm')).toBe(true);
+    expect(visibleItems(coldOff).map((i) => i.id)).toContain('diapers');
+  });
+
+  it('a template whose item was deleted is off until turned on again', () => {
+    const items = removeItem(setTemplate(seed, 'cold', true), 'socks');
+    expect(templateActive(items, 'cold')).toBe(false);
+    expect(templateActive(setTemplate(items, 'cold', true), 'cold')).toBe(true);
   });
 
   it('survives a storage round trip', () => {
-    const items = applyTemplate(seed, 'cold');
+    const items = setTemplate(seed, 'cold', true);
     expect(parseItems(serializeItems(items))).toEqual(items);
   });
 
   it('lets template-added built-ins be deleted but not the seeded ones', () => {
-    const items = applyTemplate(seed, 'cold');
+    const items = setTemplate(seed, 'cold', true);
     const socks = items.find((i) => i.id === 'socks')!;
     expect(canDelete(socks)).toBe(true);
     expect(removeItem(items, 'socks').map((i) => i.id)).not.toContain('socks');

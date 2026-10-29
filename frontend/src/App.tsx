@@ -96,10 +96,7 @@ export function App() {
       {startersOpen && (
         <StarterLists
           items={list.items}
-          onPick={(template) => {
-            list.addTemplate(template);
-            setStartersOpen(false);
-          }}
+          onToggle={list.setWeather}
           onClose={() => setStartersOpen(false)}
         />
       )}

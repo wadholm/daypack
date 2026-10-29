@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'preact/hooks';
 import { useI18n } from '../i18n/I18nProvider';
 import type { TranslationKey } from '../i18n/en';
 import { TEMPLATES, type TemplateId } from '../state/catalogue';
-import { templateAdditions, type Item } from '../state/items';
+import { templateActive, type Item } from '../state/items';
 import { actionsStyle, buttonStyle, dialogStyle, formStyle, headingStyle } from './sheetStyles';
 
 const TEMPLATE_KEYS: Record<TemplateId, TranslationKey> = {
@@ -20,20 +20,21 @@ const optionStyle = css({
   gap: '3',
   paddingInline: '4',
   textAlign: 'start',
-  _disabled: { opacity: 'dimmed', cursor: 'default' },
 });
+
+const onStyle = css({ bg: 'brand', color: 'onBrand' });
 
 const optionLabelStyle = css({ fontSize: 'label', fontWeight: 'semibold' });
 
-const optionCountStyle = css({ color: 'brand', fontSize: 'meta', fontWeight: 'bold' });
+const optionStateStyle = css({ fontSize: 'meta', fontWeight: 'bold' });
 
 interface StarterListsProps {
   items: readonly Item[];
-  onPick: (template: TemplateId) => void;
+  onToggle: (template: TemplateId, active: boolean) => void;
   onClose: () => void;
 }
 
-export function StarterLists({ items, onPick, onClose }: StarterListsProps) {
+export function StarterLists({ items, onToggle, onClose }: StarterListsProps) {
   const { t } = useI18n();
   const dialogRef = useRef<HTMLDialogElement>(null);
 
@@ -58,25 +59,24 @@ export function StarterLists({ items, onPick, onClose }: StarterListsProps) {
         <h2 class={headingStyle}>{t('starterLists')}</h2>
         <p class={introStyle}>{t('starterIntro')}</p>
         {TEMPLATES.map((template) => {
-          const missing = templateAdditions(items, template).length;
+          const active = templateActive(items, template);
           return (
             <button
               key={template}
               type="button"
-              class={cx(buttonStyle, optionStyle)}
-              disabled={missing === 0}
-              onClick={() => onPick(template)}
+              role="switch"
+              aria-checked={active}
+              class={cx(buttonStyle, optionStyle, active && onStyle)}
+              onClick={() => onToggle(template, !active)}
             >
               <span class={optionLabelStyle}>{t(TEMPLATE_KEYS[template])}</span>
-              <span class={optionCountStyle}>
-                {missing === 0 ? t('starterNone') : t('starterNew', { count: missing })}
-              </span>
+              <span class={optionStateStyle}>{active ? t('starterOn') : t('starterOff')}</span>
             </button>
           );
         })}
         <div class={actionsStyle}>
           <button type="button" class={buttonStyle} onClick={onClose}>
-            {t('close')}
+            {t('done')}
           </button>
         </div>
       </div>

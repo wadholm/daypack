@@ -25,11 +25,13 @@ export interface CatalogueEntry {
 // Catalogue ids are persisted as item ids, so never rename one.
 export const CATALOGUE: readonly CatalogueEntry[] = [
   { id: 'diapers', hue: 'yellow', icon: 'diapers', category: 'hygiene', labelKey: 'item_diapers' },
-  { id: 'wet-wipes', hue: 'sky', icon: 'diapers', category: 'hygiene', labelKey: 'item_wet-wipes' },
   { id: 'pacifier', hue: 'sky', icon: 'pacifier', category: 'comfort', labelKey: 'item_pacifier' },
   { id: 'cuddly-toy', hue: 'pink', icon: 'cuddly-toy', category: 'comfort', labelKey: 'item_cuddly-toy' },
-  { id: 'sleeping-blanket', hue: 'lavender', icon: 'blanket', category: 'comfort', labelKey: 'item_sleeping-blanket' },
   { id: 'spare-clothes', hue: 'mint', icon: 'spare-clothes', category: 'clothing', labelKey: 'item_spare-clothes' },
+  { id: 'shirt', hue: 'mint', icon: 'spare-clothes', category: 'clothing', labelKey: 'item_shirt' },
+  { id: 'shorts', hue: 'peach', icon: 'spare-clothes', category: 'clothing', labelKey: 'item_shorts' },
+  { id: 'pants', hue: 'sky', icon: 'spare-clothes', category: 'clothing', labelKey: 'item_pants' },
+  { id: 'sweater', hue: 'lavender', icon: 'spare-clothes', category: 'clothing', labelKey: 'item_sweater' },
   { id: 'socks', hue: 'pink', icon: 'socks', category: 'clothing', labelKey: 'item_socks' },
   { id: 'mittens', hue: 'peach', icon: 'beanie', category: 'clothing', labelKey: 'item_mittens' },
   { id: 'winter-overalls', hue: 'sky', icon: 'spare-clothes', category: 'clothing', labelKey: 'item_winter-overalls' },
@@ -39,7 +41,6 @@ export const CATALOGUE: readonly CatalogueEntry[] = [
   { id: 'sun-hat', hue: 'peach', icon: 'sun-hat', category: 'weather', labelKey: 'item_sun-hat' },
   { id: 'sunscreen', hue: 'yellow', icon: 'sun-hat', category: 'weather', labelKey: 'item_sunscreen' },
   { id: 'water-bottle', hue: 'sea', icon: 'water-bottle', category: 'feeding', labelKey: 'item_water-bottle' },
-  { id: 'snack', hue: 'peach', icon: 'snack', category: 'feeding', labelKey: 'item_snack' },
 ];
 
 const BY_ID = new Map(CATALOGUE.map((entry) => [entry.id, entry]));
@@ -59,18 +60,8 @@ export const SEED_IDS: readonly string[] = [
   'sun-hat',
 ];
 
-const EVERYDAY = [
-  'diapers',
-  'wet-wipes',
-  'pacifier',
-  'cuddly-toy',
-  'spare-clothes',
-  'socks',
-  'water-bottle',
-  'snack',
-];
-
+// Weather-specific items only, with no overlap, so switching one weather off never hides what another needs.
 export const TEMPLATE_ITEM_IDS: Record<TemplateId, readonly string[]> = {
-  warm: [...EVERYDAY, 'sun-hat', 'sunscreen'],
-  cold: [...EVERYDAY, 'rain-gear', 'rubber-boots', 'warm-hat', 'mittens', 'winter-overalls'],
+  warm: ['shirt', 'shorts', 'sun-hat', 'sunscreen'],
+  cold: ['sweater', 'pants', 'socks', 'rain-gear', 'rubber-boots', 'warm-hat', 'mittens', 'winter-overalls'],
 };

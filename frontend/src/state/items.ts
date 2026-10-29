@@ -214,16 +214,6 @@ export function groupByCategory(items: readonly Item[]): ItemGroup[] {
   })).filter((group) => group.items.length > 0);
 }
 
-// Hidden items count as present, so a template never resurrects something the user hid.
-export function templateAdditions(items: readonly Item[], template: TemplateId): Item[] {
-  const present = new Set(items.map((item) => item.id));
-  return TEMPLATE_ITEM_IDS[template].flatMap((id) => (present.has(id) ? [] : (catalogueItem(id) ?? [])));
-}
-
-export function applyTemplate(items: readonly Item[], template: TemplateId): Item[] {
-  return [...items, ...templateAdditions(items, template)];
-}
-
 export function visibleItems(items: readonly Item[]): Item[] {
   return items.filter((item) => !item.hidden);
 }
@@ -232,13 +222,28 @@ export function hiddenItems(items: readonly Item[]): Item[] {
   return items.filter((item) => item.hidden);
 }
 
+// A weather is on when every one of its items is on the list and visible.
+export function templateActive(items: readonly Item[], template: TemplateId): boolean {
+  return TEMPLATE_ITEM_IDS[template].every((id) => items.some((item) => item.id === id && !item.hidden));
+}
+
+// Turning a weather on adds what is missing and unhides the rest; turning it off only hides,
+// so edits and notes survive switching back.
+export function setTemplate(items: readonly Item[], template: TemplateId, active: boolean): Item[] {
+  const ids = new Set(TEMPLATE_ITEM_IDS[template]);
+  if (!active) return items.map((item) => (ids.has(item.id) ? { ...item, hidden: true } : item));
+  const present = new Set(items.map((item) => item.id));
+  const added = TEMPLATE_ITEM_IDS[template].flatMap((id) => (present.has(id) ? [] : (catalogueItem(id) ?? [])));
+  return [...items.map((item) => (ids.has(item.id) ? { ...item, hidden: false } : item)), ...added];
+}
+
 export function useItemList(): {
   items: readonly Item[];
   add: (draft: ItemDraft) => void;
   update: (id: string, patch: ItemPatch) => void;
   hide: (id: string, hidden: boolean) => void;
   remove: (id: string) => void;
-  addTemplate: (template: TemplateId) => void;
+  setWeather: (template: TemplateId, active: boolean) => void;
 } {
   const [items, setItems] = useState<readonly Item[]>(() => parseItems(readStorage(ITEMS_STORAGE_KEY)));
 
@@ -252,6 +257,6 @@ export function useItemList(): {
     update: (id, patch) => setItems((current) => updateItem(current, id, patch)),
     hide: (id, hidden) => setItems((current) => setHidden(current, id, hidden)),
     remove: (id) => setItems((current) => removeItem(current, id)),
-    addTemplate: (template) => setItems((current) => applyTemplate(current, template)),
+    setWeather: (template, active) => setItems((current) => setTemplate(current, template, active)),
   };
 }
