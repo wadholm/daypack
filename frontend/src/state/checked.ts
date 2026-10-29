@@ -26,6 +26,12 @@ export function toggleChecked(checked: ReadonlySet<string>, id: string): Set<str
   return next;
 }
 
+export function uncheck(checked: ReadonlySet<string>, id: string): Set<string> {
+  const next = new Set(checked);
+  next.delete(id);
+  return next;
+}
+
 // Only ids in the current list count, so stale stored ids can't push progress past 100%.
 export function countPacked(itemIds: readonly string[], checked: ReadonlySet<string>): number {
   return itemIds.filter((id) => checked.has(id)).length;
@@ -38,6 +44,7 @@ export function progressPercent(packed: number, total: number): number {
 export function useChecked(): {
   checked: ReadonlySet<string>;
   toggle: (id: string) => void;
+  forget: (id: string) => void;
   reset: () => void;
 } {
   const [checked, setChecked] = useState<ReadonlySet<string>>(() =>
@@ -51,6 +58,8 @@ export function useChecked(): {
   return {
     checked,
     toggle: (id) => setChecked((current) => toggleChecked(current, id)),
+    // Called when a custom item is deleted, so a later item reusing the slug doesn't start ticked.
+    forget: (id) => setChecked((current) => uncheck(current, id)),
     reset: () => setChecked(new Set()),
   };
 }

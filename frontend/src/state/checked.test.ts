@@ -5,6 +5,7 @@ import {
   progressPercent,
   serializeChecked,
   toggleChecked,
+  uncheck,
 } from './checked';
 
 describe('parseChecked', () => {
@@ -48,5 +49,13 @@ describe('progress', () => {
     expect(progressPercent(7, 7)).toBe(100);
     expect(progressPercent(0, 7)).toBe(0);
     expect(progressPercent(0, 0)).toBe(0);
+  });
+});
+
+describe('uncheck', () => {
+  it('removes one id without mutating the input', () => {
+    const original = new Set(['diapers', 'towel']);
+    expect(uncheck(original, 'towel')).toEqual(new Set(['diapers']));
+    expect(original.has('towel')).toBe(true);
   });
 });

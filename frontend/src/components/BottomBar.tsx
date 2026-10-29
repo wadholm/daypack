@@ -1,5 +1,4 @@
 import { css } from '../../styled-system/css';
-import { useI18n } from '../i18n/I18nProvider';
 
 // pointer-events pass through the fade so the list underneath stays scrollable.
 const barStyle = css({
@@ -37,13 +36,12 @@ const buttonStyle = css({
   _motionReduce: { transitionDuration: 'none', _active: { transform: 'none' } },
 });
 
-export function ResetBar({ onReset }: { onReset: () => void }) {
-  const { t } = useI18n();
-
+// The one primary action at the bottom: Reset while packing, Done while editing.
+export function BottomBar({ label, onPress }: { label: string; onPress: () => void }) {
   return (
     <div class={barStyle}>
-      <button type="button" class={buttonStyle} onClick={onReset}>
-        {t('reset')}
+      <button type="button" class={buttonStyle} onClick={onPress}>
+        {label}
       </button>
     </div>
   );

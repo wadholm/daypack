@@ -1,55 +1,11 @@
 import { css, cx } from '../../styled-system/css';
-import type { Item } from '../api/items';
+import { useI18n } from '../i18n/I18nProvider';
+import { itemLabel } from '../i18n/itemLabel';
 import { ItemIcon } from '../icons/ItemIcon';
 import { iconProps } from '../icons/svgProps';
+import type { Item } from '../state/items';
 import { checkHue, tileHue } from './hueStyles';
-
-const rowStyle = css({
-  display: 'flex',
-  alignItems: 'center',
-  gap: '3',
-  width: 'full',
-  minHeight: 'row',
-  paddingBlock: '2',
-  paddingInline: '4',
-  border: 'none',
-  bg: 'transparent',
-  color: 'text',
-  fontFamily: 'body',
-  textAlign: 'start',
-  cursor: 'pointer',
-  '& + &': {
-    borderTopWidth: 'divider',
-    borderTopStyle: 'solid',
-    borderTopColor: 'divider',
-  },
-});
-
-const fadeStyle = {
-  transitionProperty: 'opacity',
-  transitionDuration: 'fade',
-  '[aria-checked=true] &': { opacity: 'dimmed' },
-  _motionReduce: { transitionDuration: 'none' },
-} as const;
-
-const tileStyle = css({
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  flexShrink: 0,
-  width: 'iconTile',
-  height: 'iconTile',
-  borderRadius: 'full',
-  ...fadeStyle,
-});
-
-const labelStyle = css({
-  flexGrow: 1,
-  fontSize: 'label',
-  fontWeight: 'semibold',
-  ...fadeStyle,
-  '[aria-checked=true] &': { opacity: 'dimmed', textDecoration: 'line-through' },
-});
+import { labelStyle, noteStyle, rowStyle, textStyle, tileStyle } from './rowStyles';
 
 // The checkbox itself never dims, only the tile and label do.
 const checkboxStyle = css({
@@ -75,13 +31,49 @@ const tickStyle = css({
   _motionReduce: { animationDuration: 'none' },
 });
 
+const chevronStyle = css({ width: 'icon', height: 'icon', flexShrink: 0, color: 'textMuted' });
+
 interface ItemRowProps {
   item: Item;
   checked: boolean;
+  editing: boolean;
   onToggle: (id: string) => void;
+  onEdit: (id: string) => void;
 }
 
-export function ItemRow({ item, checked, onToggle }: ItemRowProps) {
+// In pack mode a tap ticks the item; in edit mode the same row opens the editor instead.
+export function ItemRow({ item, checked, editing, onToggle, onEdit }: ItemRowProps) {
+  const { t } = useI18n();
+  const label = itemLabel(item, t);
+
+  const content = (
+    <>
+      <span class={cx(tileStyle, tileHue({ hue: item.hue }))}>
+        <ItemIcon id={item.icon} />
+      </span>
+      <span class={textStyle}>
+        <span class={labelStyle}>{label}</span>
+        {item.note !== '' && <span class={noteStyle}>{item.note}</span>}
+      </span>
+    </>
+  );
+
+  if (editing) {
+    return (
+      <button
+        type="button"
+        class={rowStyle}
+        aria-label={t('editItemLabel', { name: label })}
+        onClick={() => onEdit(item.id)}
+      >
+        {content}
+        <svg {...iconProps} class={chevronStyle}>
+          <path d="M9 6l6 6-6 6" />
+        </svg>
+      </button>
+    );
+  }
+
   return (
     <button
       type="button"
@@ -90,10 +82,7 @@ export function ItemRow({ item, checked, onToggle }: ItemRowProps) {
       class={rowStyle}
       onClick={() => onToggle(item.id)}
     >
-      <span class={cx(tileStyle, tileHue({ hue: item.hue }))}>
-        <ItemIcon id={item.id} />
-      </span>
-      <span class={labelStyle}>{item.label}</span>
+      {content}
       <span class={cx(checkboxStyle, checkHue({ hue: item.hue }))}>
         {checked && (
           <svg {...iconProps} stroke-width={3} class={tickStyle}>

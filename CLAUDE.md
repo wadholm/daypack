@@ -7,7 +7,7 @@ Preact + Vite + TypeScript (`/frontend`), Panda CSS, Hono on Cloudflare Workers 
 
 ## Layout
 - `frontend/` Vite app: `src/components`, `src/i18n` (`en.ts`, `sv.ts`), `src/state`, `src/icons`
-- `backend/` Hono app: `src/index.ts`, `src/items.ts`
+- `backend/` Hono app: `src/index.ts` (no routes yet; items live client-side until slice 4)
 - `wrangler.jsonc` (root): Worker + assets config
 - `DESIGN.md`, `SPEC.md`
 

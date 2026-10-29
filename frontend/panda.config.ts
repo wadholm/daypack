@@ -33,6 +33,14 @@ const keyframes = defineKeyframes({
     '60%': { transform: 'scale(1.15)' },
     '100%': { transform: 'scale(1)' },
   },
+  sheetUp: {
+    '0%': { transform: 'translateY(100%)' },
+    '100%': { transform: 'translateY(0)' },
+  },
+  scrimIn: {
+    '0%': { opacity: '0' },
+    '100%': { opacity: '1' },
+  },
 })
 
 export default defineConfig({
@@ -99,6 +107,7 @@ export default defineConfig({
       },
       sizes: {
         full: { value: '100%' },
+        zero: { value: '0px' },
         viewport: { value: '100dvh' },
         tickGlyph: { value: '60%' },
         content: { value: '480px' },
@@ -111,6 +120,9 @@ export default defineConfig({
         progress: { value: '10px' },
         reset: { value: '60px' },
         headerGlow: { value: '330px' },
+        swatch: { value: '48px' },
+        sheetMax: { value: '90dvh' },
+        noteField: { value: '88px' },
       },
       borderWidths: {
         check: { value: '2px' },
@@ -119,6 +131,7 @@ export default defineConfig({
       radii: {
         card: { value: '24px' },
         reset: { value: '18px' },
+        sheet: { value: '28px' },
         full: { value: '9999px' },
       },
       opacity: {
@@ -134,6 +147,7 @@ export default defineConfig({
         fade: { value: '280ms' },
         progress: { value: '500ms' },
         press: { value: '120ms' },
+        sheet: { value: '280ms' },
       },
     },
 
@@ -148,6 +162,8 @@ export default defineConfig({
         divider: { value: { base: '#F0ECF2', _dark: '#2C2739' } },
         track: { value: { base: '#E9E4EF', _dark: '#302A40' } },
         chip: { value: { base: 'rgba(255, 255, 255, 0.75)', _dark: 'rgba(255, 255, 255, 0.10)' } },
+        scrim: { value: { base: 'rgba(36, 33, 58, 0.45)', _dark: 'rgba(0, 0, 0, 0.6)' } },
+        danger: { value: { base: '#B3261E', _dark: '#FFB4AB' } },
         onAccent: { value: '#3A2A06' },
         // White tick on a pastel check color; in dark mode the tick uses the bg color.
         tick: { value: { base: '#FFFFFF', _dark: '#16131F' } },

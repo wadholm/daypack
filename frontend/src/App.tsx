@@ -1,12 +1,18 @@
 import { css } from '../styled-system/css';
+import { useState } from 'preact/hooks';
+import { BottomBar } from './components/BottomBar';
+import { HiddenItems } from './components/HiddenItems';
+import { ItemEditor } from './components/ItemEditor';
 import { ItemList } from './components/ItemList';
+import { ListActions } from './components/ListActions';
 import { Progress } from './components/Progress';
-import { ResetBar } from './components/ResetBar';
-import { StatusMessage } from './components/StatusMessage';
 import { TopBar } from './components/TopBar';
 import { useI18n } from './i18n/I18nProvider';
 import { countPacked, progressPercent, useChecked } from './state/checked';
-import { useItems } from './state/useItems';
+import { hiddenItems, useItemList, visibleItems } from './state/items';
+
+// 'new' opens the editor for a fresh custom item; a string is the id being edited.
+type EditorTarget = 'new' | string | null;
 
 const pageStyle = css({ position: 'relative', minHeight: 'viewport' });
 
@@ -50,13 +56,17 @@ function formatToday(locale: string): string {
 }
 
 export function App() {
-  const { t, lang } = useI18n();
-  const itemsState = useItems(lang);
-  const { checked, toggle, reset } = useChecked();
+  const { t } = useI18n();
+  const list = useItemList();
+  const { checked, toggle, forget, reset } = useChecked();
+  const [editing, setEditing] = useState(false);
+  const [editorTarget, setEditorTarget] = useState<EditorTarget>(null);
 
-  const items = itemsState.status === 'ready' ? itemsState.items : [];
-  const packed = countPacked(items.map((item) => item.id), checked);
-  const percent = progressPercent(packed, items.length);
+  const visible = visibleItems(list.items);
+  const packed = countPacked(visible.map((item) => item.id), checked);
+  const percent = progressPercent(packed, visible.length);
+  const editedItem = list.items.find((item) => item.id === editorTarget) ?? null;
+  const closeEditor = () => setEditorTarget(null);
 
   return (
     <div class={pageStyle}>
@@ -66,19 +76,40 @@ export function App() {
         <header class={headerStyle}>
           <span class={dateStyle}>{formatToday(t('dateLocale'))}</span>
           <h1 class={titleStyle}>{t('title')}</h1>
-          {itemsState.status === 'ready' && <Progress packed={packed} total={items.length} percent={percent} />}
+          <Progress packed={packed} total={visible.length} percent={percent} />
         </header>
-        {itemsState.status === 'ready' ? (
-          <ItemList items={items} checked={checked} onToggle={toggle} />
-        ) : (
-          <StatusMessage
-            {...(itemsState.status === 'error'
-              ? { status: 'error' as const, onRetry: itemsState.retry }
-              : { status: 'loading' as const })}
-          />
-        )}
+        <ItemList items={visible} checked={checked} editing={editing} onToggle={toggle} onEdit={setEditorTarget} />
+        <ListActions editing={editing} onAdd={() => setEditorTarget('new')} onEditList={() => setEditing(true)} />
+        {editing && <HiddenItems items={hiddenItems(list.items)} onShow={(id) => list.hide(id, false)} />}
       </div>
-      {itemsState.status === 'ready' && <ResetBar onReset={reset} />}
+      <BottomBar
+        label={editing ? t('done') : t('reset')}
+        onPress={editing ? () => setEditing(false) : reset}
+      />
+      {editorTarget !== null && (
+        <ItemEditor
+          // Remount per target so the form fields reset.
+          key={editorTarget}
+          item={editedItem}
+          onClose={closeEditor}
+          onSave={(draft) => {
+            if (editedItem) list.update(editedItem.id, draft);
+            else list.add(draft);
+            closeEditor();
+          }}
+          onHide={() => {
+            if (editedItem) list.hide(editedItem.id, true);
+            closeEditor();
+          }}
+          onDelete={() => {
+            if (editedItem) {
+              list.remove(editedItem.id);
+              forget(editedItem.id);
+            }
+            closeEditor();
+          }}
+        />
+      )}
     </div>
   );
 }
