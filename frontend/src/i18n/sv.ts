@@ -91,6 +91,7 @@ export const sv: Dictionary = {
   starterIntro: 'Slå på det du packar för. Stänger du av ett gömmer det sakerna igen.',
   starter_warm: 'Varmt väder',
   starter_cold: 'Kallt väder',
+  starter_rain: 'Regn',
   starter_overnight: 'Övernattning',
   starter_outing: 'Ute och på språng',
   starter_swim: 'Simning',

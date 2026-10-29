@@ -90,6 +90,7 @@ export const en = {
   starterIntro: 'Switch on what you are packing for. Switching one off hides its items again.',
   starter_warm: 'Warm weather',
   starter_cold: 'Cold weather',
+  starter_rain: 'Rain',
   starter_overnight: 'Overnight stay',
   starter_outing: 'Out and about',
   starter_swim: 'Swimming',

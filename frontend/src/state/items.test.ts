@@ -275,6 +275,14 @@ describe('weather templates', () => {
     expect(all.some((id) => SEED_IDS.includes(id))).toBe(false);
   });
 
+  it('keeps rain gear on its own list so it works in any weather', () => {
+    const rain = setTemplate(setTemplate(seed, 'warm', true), 'rain', true);
+    expect(templateActive(rain, 'rain')).toBe(true);
+    const warmOff = setTemplate(rain, 'warm', false);
+    expect(visibleItems(warmOff).map((i) => i.id)).toEqual(expect.arrayContaining(['rain-gear', 'rubber-boots']));
+    expect(templateActive(setTemplate(rain, 'cold', true), 'rain')).toBe(true);
+  });
+
   it('keeps swimming separate from the overnight list', () => {
     const overnight = setTemplate(seed, 'overnight', true);
     expect(templateActive(overnight, 'swim')).toBe(false);

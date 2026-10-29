@@ -10,7 +10,7 @@ export function isCategory(value: unknown): value is Category {
   return typeof value === 'string' && (CATEGORIES as readonly string[]).includes(value);
 }
 
-export const TEMPLATES = ['warm', 'cold', 'overnight', 'outing', 'swim'] as const;
+export const TEMPLATES = ['warm', 'cold', 'rain', 'overnight', 'outing', 'swim'] as const;
 export type TemplateId = (typeof TEMPLATES)[number];
 
 export interface CatalogueEntry {
@@ -85,12 +85,13 @@ export const SEED_IDS: readonly string[] = ['diapers', 'pacifier', 'cuddly-toy',
 // Everyday items (diapers, socks, water bottle) stay out of every template for the same reason.
 export const TEMPLATE_ITEM_IDS: Record<TemplateId, readonly string[]> = {
   warm: ['shirt', 'shorts', 'sun-hat', 'sunscreen', 'uv-clothes', 'sunglasses'],
-  cold: ['sweater', 'pants', 'rain-gear', 'rubber-boots', 'warm-hat', 'mittens', 'winter-overalls'],
+  cold: ['sweater', 'pants', 'warm-hat', 'mittens', 'winter-overalls'],
+  rain: ['rain-gear', 'rubber-boots', 'rain-cover'],
   overnight: [
     'travel-cot', 'cot-sheet', 'sleeping-bag', 'blanket', 'night-light', 'bedtime-books', 'pyjamas', 'bodysuits',
     'toiletry-bag', 'washcloths', 'toothbrush', 'wet-wipes',
     'formula', 'baby-bottles', 'food-pouches', 'snack', 'spoons', 'bib',
   ],
-  outing: ['pushchair', 'rain-cover', 'mosquito-net', 'uv-curtain', 'baby-carrier'],
+  outing: ['pushchair', 'mosquito-net', 'uv-curtain', 'baby-carrier'],
   swim: ['swim-trunks', 'swim-diaper', 'bathrobe', 'towel'],
 };

@@ -9,6 +9,7 @@ import { actionsStyle, buttonStyle, dialogStyle, formStyle, headingStyle } from 
 const TEMPLATE_KEYS: Record<TemplateId, TranslationKey> = {
   warm: 'starter_warm',
   cold: 'starter_cold',
+  rain: 'starter_rain',
   overnight: 'starter_overnight',
   outing: 'starter_outing',
   swim: 'starter_swim',
