@@ -30,9 +30,9 @@ const contentStyle = css({
 const headerStyle = css({
   display: 'flex',
   flexDirection: 'column',
-  gap: '2',
+  gap: '1',
   paddingInline: '5',
-  paddingBlock: '5',
+  paddingBlock: '4',
 });
 
 const dateStyle = css({ fontSize: 'meta', fontWeight: 'semibold', color: 'textMuted' });

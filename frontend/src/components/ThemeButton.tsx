@@ -11,13 +11,16 @@ const buttonStyle = css({
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
-  width: 'tapTarget',
-  height: 'tapTarget',
+  position: 'relative',
+  width: 'chip',
+  height: 'chip',
   borderRadius: 'full',
   border: 'none',
   bg: 'chip',
   color: 'text',
   cursor: 'pointer',
+  // Grows the tap area to tapTarget without growing the visible circle.
+  '&::after': { content: '""', position: 'absolute', inset: '-2' },
 });
 
 const svgProps = {
