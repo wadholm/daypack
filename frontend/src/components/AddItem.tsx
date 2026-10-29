@@ -19,6 +19,27 @@ import {
 
 const resultsStyle = css({ borderRadius: 'card', bg: 'bg', overflow: 'hidden' });
 
+const moreStyle = css({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: 'full',
+  minHeight: 'tapTarget',
+  border: 'none',
+  bg: 'transparent',
+  color: 'brand',
+  fontFamily: 'body',
+  fontSize: 'meta',
+  fontWeight: 'bold',
+  cursor: 'pointer',
+  borderTopWidth: 'divider',
+  borderTopStyle: 'solid',
+  borderTopColor: 'divider',
+});
+
+// Long lists are hard to scan on a phone, so show a handful and let the search or "more" do the rest.
+const PREVIEW_COUNT = 5;
+
 const hintStyle = css({ margin: '0', color: 'textMuted', fontSize: 'meta', fontWeight: 'semibold' });
 
 const addActionStyle = css({ flexShrink: 0, color: 'brand', fontSize: 'meta', fontWeight: 'bold' });
@@ -36,6 +57,7 @@ export function AddItem({ items, onInclude, onCreate, onClose }: AddItemProps) {
   const { t } = useI18n();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [query, setQuery] = useState('');
+  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
     dialogRef.current?.showModal();
@@ -44,6 +66,7 @@ export function AddItem({ items, onInclude, onCreate, onClose }: AddItemProps) {
   const labelOf = (item: Item) => itemLabel(item, t);
   const candidates = availableItems(items);
   const matches = searchItems(candidates, labelOf, query);
+  const shown = showAll ? matches : matches.slice(0, PREVIEW_COUNT);
   const name = query.trim();
   const existing = findByLabel([...items, ...candidates], labelOf, name);
   const onList = existing !== undefined && !existing.hidden && items.some((item) => item.id === existing.id);
@@ -77,7 +100,7 @@ export function AddItem({ items, onInclude, onCreate, onClose }: AddItemProps) {
 
         {matches.length > 0 && (
           <div class={resultsStyle}>
-            {matches.map((item) => {
+            {shown.map((item) => {
               const label = labelOf(item);
               return (
                 <button
@@ -98,6 +121,11 @@ export function AddItem({ items, onInclude, onCreate, onClose }: AddItemProps) {
                 </button>
               );
             })}
+            {shown.length < matches.length && (
+              <button type="button" class={moreStyle} onClick={() => setShowAll(true)}>
+                {t('showMore', { count: matches.length - shown.length })}
+              </button>
+            )}
           </div>
         )}
 

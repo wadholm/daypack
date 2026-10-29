@@ -68,6 +68,7 @@ export const en = {
   createNewItem: 'Create a new item',
   createItem: 'Create {name}',
   hideItemLabel: 'Hide {name} from the list',
+  showMore: 'Show {count} more',
   newItem: 'New item',
   editItem: 'Edit item',
   editItemLabel: 'Edit {name}',

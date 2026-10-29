@@ -69,6 +69,7 @@ export const sv: Dictionary = {
   createNewItem: 'Skapa en ny sak',
   createItem: 'Skapa {name}',
   hideItemLabel: 'Dölj {name} från listan',
+  showMore: 'Visa {count} till',
   newItem: 'Ny sak',
   editItem: 'Redigera sak',
   editItemLabel: 'Redigera {name}',

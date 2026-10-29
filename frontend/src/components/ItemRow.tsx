@@ -49,7 +49,7 @@ const hideButtonStyle = css({
   cursor: 'pointer',
 });
 
-const chevronStyle = css({ width: 'icon', height: 'icon', flexShrink: 0, color: 'textMuted' });
+const editIconStyle = css({ width: 'icon', height: 'icon', flexShrink: 0, color: 'textMuted' });
 
 const hideIconStyle = css({ width: 'icon', height: 'icon' });
 
@@ -89,8 +89,9 @@ export function ItemRow({ item, checked, editing, onToggle, onEdit, onHide }: It
           onClick={() => onEdit(item.id)}
         >
           {content}
-          <svg {...iconProps} class={chevronStyle}>
-            <path d="M9 6l6 6-6 6" />
+          <svg {...iconProps} class={editIconStyle}>
+            <path d="M4 20h4L19 9l-4-4L4 16z" />
+            <path d="M13.5 6.5l4 4" />
           </svg>
         </button>
         <button
