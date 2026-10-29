@@ -271,7 +271,7 @@ describe('weather templates', () => {
     expect(templateActive(setTemplate(items, 'cold', true), 'cold')).toBe(true);
   });
 
-  it('keeps the four lists disjoint and only made of catalogue items', () => {
+  it('keeps the lists disjoint and only made of catalogue items', () => {
     const all = TEMPLATES.flatMap((template) => TEMPLATE_ITEM_IDS[template]);
     expect(new Set(all).size).toBe(all.length);
     expect(all.every((id) => catalogueEntry(id) !== undefined)).toBe(true);

@@ -3,14 +3,14 @@ import type { IconId } from '../icons/iconIds';
 import type { Hue } from './items';
 
 // Display order of the groups on the list.
-export const CATEGORIES = ['clothing', 'sleep', 'hygiene', 'feeding', 'comfort', 'weather', 'swim', 'other'] as const;
+export const CATEGORIES = ['clothing', 'sleep', 'hygiene', 'feeding', 'comfort', 'weather', 'outing', 'swim', 'other'] as const;
 export type Category = (typeof CATEGORIES)[number];
 
 export function isCategory(value: unknown): value is Category {
   return typeof value === 'string' && (CATEGORIES as readonly string[]).includes(value);
 }
 
-export const TEMPLATES = ['warm', 'cold', 'overnight', 'swim'] as const;
+export const TEMPLATES = ['warm', 'cold', 'overnight', 'outing', 'swim'] as const;
 export type TemplateId = (typeof TEMPLATES)[number];
 
 export interface CatalogueEntry {
@@ -47,7 +47,6 @@ export const CATALOGUE: readonly CatalogueEntry[] = [
   { id: 'toiletry-bag', hue: 'mint', icon: 'heart', category: 'hygiene', labelKey: 'item_toiletry-bag' },
   { id: 'washcloths', hue: 'sea', icon: 'heart', category: 'hygiene', labelKey: 'item_washcloths' },
   { id: 'toothbrush', hue: 'pink', icon: 'heart', category: 'hygiene', labelKey: 'item_toothbrush' },
-  { id: 'rehydration', hue: 'peach', icon: 'heart', category: 'hygiene', labelKey: 'item_rehydration' },
   { id: 'water-bottle', hue: 'sea', icon: 'water-bottle', category: 'feeding', labelKey: 'item_water-bottle' },
   { id: 'formula', hue: 'yellow', icon: 'water-bottle', category: 'feeding', labelKey: 'item_formula' },
   { id: 'baby-bottles', hue: 'sky', icon: 'water-bottle', category: 'feeding', labelKey: 'item_baby-bottles' },
@@ -61,6 +60,11 @@ export const CATALOGUE: readonly CatalogueEntry[] = [
   { id: 'sun-hat', hue: 'peach', icon: 'sun-hat', category: 'weather', labelKey: 'item_sun-hat' },
   { id: 'sunscreen', hue: 'yellow', icon: 'sun-hat', category: 'weather', labelKey: 'item_sunscreen' },
   { id: 'sunglasses', hue: 'sky', icon: 'star', category: 'weather', labelKey: 'item_sunglasses' },
+  { id: 'pushchair', hue: 'sea', icon: 'star', category: 'outing', labelKey: 'item_pushchair' },
+  { id: 'rain-cover', hue: 'lavender', icon: 'rain-gear', category: 'outing', labelKey: 'item_rain-cover' },
+  { id: 'mosquito-net', hue: 'mint', icon: 'blanket', category: 'outing', labelKey: 'item_mosquito-net' },
+  { id: 'uv-curtain', hue: 'yellow', icon: 'blanket', category: 'outing', labelKey: 'item_uv-curtain' },
+  { id: 'baby-carrier', hue: 'pink', icon: 'heart', category: 'outing', labelKey: 'item_baby-carrier' },
   { id: 'swim-trunks', hue: 'sky', icon: 'spare-clothes', category: 'swim', labelKey: 'item_swim-trunks' },
   { id: 'swim-diaper', hue: 'sea', icon: 'diapers', category: 'swim', labelKey: 'item_swim-diaper' },
   { id: 'bathrobe', hue: 'lavender', icon: 'spare-clothes', category: 'swim', labelKey: 'item_bathrobe' },
@@ -91,8 +95,9 @@ export const TEMPLATE_ITEM_IDS: Record<TemplateId, readonly string[]> = {
   cold: ['sweater', 'pants', 'rain-gear', 'rubber-boots', 'warm-hat', 'mittens', 'winter-overalls'],
   overnight: [
     'travel-cot', 'cot-sheet', 'sleeping-bag', 'blanket', 'night-light', 'bedtime-books', 'pyjamas', 'bodysuits',
-    'toiletry-bag', 'washcloths', 'toothbrush', 'rehydration', 'wet-wipes',
+    'toiletry-bag', 'washcloths', 'toothbrush', 'wet-wipes',
     'formula', 'baby-bottles', 'food-pouches', 'snack', 'spoons', 'bib',
   ],
+  outing: ['pushchair', 'rain-cover', 'mosquito-net', 'uv-curtain', 'baby-carrier'],
   swim: ['swim-trunks', 'swim-diaper', 'bathrobe', 'towel'],
 };

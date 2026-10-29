@@ -8,6 +8,7 @@ export const CATEGORY_KEYS: Record<Category, TranslationKey> = {
   feeding: 'category_feeding',
   comfort: 'category_comfort',
   weather: 'category_weather',
+  outing: 'category_outing',
   swim: 'category_swim',
   other: 'category_other',
 };

@@ -10,6 +10,7 @@ const TEMPLATE_KEYS: Record<TemplateId, TranslationKey> = {
   warm: 'starter_warm',
   cold: 'starter_cold',
   overnight: 'starter_overnight',
+  outing: 'starter_outing',
   swim: 'starter_swim',
 };
 
