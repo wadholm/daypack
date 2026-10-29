@@ -2,7 +2,6 @@ import { css } from '../styled-system/css';
 import { useState } from 'preact/hooks';
 import { AddItem } from './components/AddItem';
 import { BottomBar } from './components/BottomBar';
-import { HiddenItems } from './components/HiddenItems';
 import { ItemEditor } from './components/ItemEditor';
 import { ItemList } from './components/ItemList';
 import { ListActions } from './components/ListActions';
@@ -11,7 +10,7 @@ import { Progress } from './components/Progress';
 import { TopBar } from './components/TopBar';
 import { useI18n } from './i18n/I18nProvider';
 import { countPacked, progressPercent, useChecked } from './state/checked';
-import { hiddenItems, useItemList, visibleItems } from './state/items';
+import { useItemList, visibleItems } from './state/items';
 
 // 'new' opens the editor for a fresh custom item; a string is the id being edited.
 type EditorTarget = 'new' | string | null;
@@ -98,7 +97,6 @@ export function App() {
           onEditList={() => setEditing(true)}
           onStarters={() => setStartersOpen(true)}
         />
-        {editing && <HiddenItems items={hiddenItems(list.items)} onShow={(id) => list.hide(id, false)} />}
       </div>
       <BottomBar
         label={editing ? t('done') : t('reset')}
