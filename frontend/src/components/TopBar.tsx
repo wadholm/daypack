@@ -17,6 +17,7 @@ const barStyle = css({
   alignItems: 'center',
   justifyContent: 'space-between',
   minHeight: 'tapTarget',
+  paddingInline: '5',
 });
 
 const brandStyle = css({

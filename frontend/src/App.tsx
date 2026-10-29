@@ -31,7 +31,7 @@ const headerStyle = css({
   display: 'flex',
   flexDirection: 'column',
   gap: '2',
-  paddingInline: '4',
+  paddingInline: '5',
   paddingBlock: '5',
 });
 

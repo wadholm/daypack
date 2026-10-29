@@ -92,7 +92,8 @@ export default defineConfig({
         '8': { value: '32px' },
         resetBottom: { value: '34px' },
         // Safe-area aware paddings: env() only resolves at runtime, so they live here as tokens.
-        pageTop: { value: 'calc({spacing.3} + env(safe-area-inset-top))' },
+        // At least 32px of clearance even where the browser reports no safe-area inset, so the top bar never hugs the edge.
+        pageTop: { value: 'calc(max(env(safe-area-inset-top), {spacing.8}) + {spacing.4})' },
         resetBarBottom: { value: 'calc({spacing.resetBottom} + env(safe-area-inset-bottom))' },
         pageBottom: { value: 'calc({sizes.reset} + {spacing.resetBottom} + env(safe-area-inset-bottom) + {spacing.8})' },
       },

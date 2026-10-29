@@ -1,6 +1,8 @@
 import { css } from '../../styled-system/css';
 import { useI18n } from '../i18n/I18nProvider';
 
+const wrapperStyle = css({ display: 'flex', flexDirection: 'column', gap: '2' });
+
 const rowStyle = css({
   display: 'flex',
   justifyContent: 'space-between',
@@ -37,7 +39,7 @@ export function Progress({ packed, total, percent }: ProgressProps) {
   const { t } = useI18n();
 
   return (
-    <div>
+    <div class={wrapperStyle}>
       <div class={rowStyle}>
         <span>{t('packedCount', { packed, total })}</span>
         <span class={mutedStyle}>{percent}%</span>
