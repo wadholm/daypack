@@ -11,13 +11,15 @@ const LANG_NAME_KEYS: Record<Lang, TranslationKey> = {
 const groupStyle = css({
   display: 'inline-flex',
   alignItems: 'center',
-  height: 'tapTarget',
+  height: 'chip',
+  padding: 'chipInset',
   borderRadius: 'full',
   bg: 'chip',
 });
 
 const segmentStyle = css({
-  minWidth: 'tapTarget',
+  position: 'relative',
+  minWidth: 'segment',
   height: 'full',
   border: 'none',
   borderRadius: 'full',
@@ -27,6 +29,8 @@ const segmentStyle = css({
   fontSize: 'pill',
   fontWeight: 'bold',
   cursor: 'pointer',
+  // Grows the tap area to tapTarget without growing the visible pill.
+  '&::after': { content: '""', position: 'absolute', insetBlock: '-3', insetInline: '-1' },
   '&[aria-pressed=true]': { bg: 'brand', color: 'onBrand' },
 });
 

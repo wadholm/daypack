@@ -90,6 +90,7 @@ export default defineConfig({
         '5': { value: '20px' },
         '6': { value: '24px' },
         '8': { value: '32px' },
+        chipInset: { value: '3px' },
         resetBottom: { value: '34px' },
         // Safe-area aware paddings: env() only resolves at runtime, so they live here as tokens.
         // At least 32px of clearance even where the browser reports no safe-area inset, so the top bar never hugs the edge.
@@ -105,6 +106,9 @@ export default defineConfig({
         icon: { value: '22px' },
         logo: { value: '28px' },
         tapTarget: { value: '48px' },
+        // Visible size of the top-bar controls; their tap area is extended to tapTarget with a pseudo-element.
+        chip: { value: '32px' },
+        segment: { value: '42px' },
         row: { value: '56px' },
         iconTile: { value: '38px' },
         checkbox: { value: '30px' },
