@@ -7,44 +7,38 @@ import { canDelete, categoryOf, type Hue, type Item, type ItemDraft } from '../s
 import type { IconId } from '../icons/iconIds';
 import { CATEGORY_KEYS } from '../i18n/categoryKeys';
 import { HuePicker, IconPicker } from './Pickers';
-import { actionsStyle, buttonStyle, dialogStyle, formStyle, headingStyle } from './sheetStyles';
+import {
+  actionsStyle,
+  buttonStyle,
+  dangerButtonStyle,
+  dialogStyle,
+  formStyle,
+  headingStyle,
+  inputStyle,
+  primaryButtonStyle,
+} from './sheetStyles';
 
 const fieldStyle = css({ display: 'flex', flexDirection: 'column', gap: '2', border: 'none', padding: '0', margin: '0' });
 
 const fieldLabelStyle = css({ fontSize: 'meta', fontWeight: 'bold', color: 'textMuted', padding: '0' });
 
-const inputStyle = css({
-  minHeight: 'tapTarget',
-  paddingInline: '4',
-  border: 'none',
-  borderRadius: 'reset',
-  bg: 'bg',
-  color: 'text',
-  fontFamily: 'body',
-  // 17px keeps iOS from zooming the page on focus.
-  fontSize: 'label',
-  fontWeight: 'semibold',
-});
-
 const noteInputStyle = css({ minHeight: 'noteField', paddingBlock: '3', resize: 'none' });
-
-const primaryStyle = css({ bg: 'brand', color: 'onBrand', _disabled: { opacity: 'dimmed', cursor: 'default' } });
-
-const dangerStyle = css({ color: 'danger' });
 
 interface ItemEditorProps {
   // null opens the editor for a brand-new custom item.
   item: Item | null;
+  // Prefills the name when the editor was opened from a search with no match.
+  initialLabel?: string;
   onSave: (draft: ItemDraft) => void;
   onHide: () => void;
   onDelete: () => void;
   onClose: () => void;
 }
 
-export function ItemEditor({ item, onSave, onHide, onDelete, onClose }: ItemEditorProps) {
+export function ItemEditor({ item, initialLabel = '', onSave, onHide, onDelete, onClose }: ItemEditorProps) {
   const { t } = useI18n();
   const dialogRef = useRef<HTMLDialogElement>(null);
-  const [label, setLabel] = useState(item ? (item.label ?? '') : '');
+  const [label, setLabel] = useState(item ? (item.label ?? '') : initialLabel);
   const [hue, setHue] = useState<Hue>(item?.hue ?? 'lavender');
   const [icon, setIcon] = useState<IconId>(item?.icon ?? 'star');
   const [category, setCategory] = useState<Category>(item ? categoryOf(item) : 'other');
@@ -134,7 +128,7 @@ export function ItemEditor({ item, onSave, onHide, onDelete, onClose }: ItemEdit
           <button type="button" class={buttonStyle} onClick={onClose}>
             {t('cancel')}
           </button>
-          <button type="submit" class={cx(buttonStyle, primaryStyle)} disabled={!canSave}>
+          <button type="submit" class={primaryButtonStyle} disabled={!canSave}>
             {t('save')}
           </button>
         </div>
@@ -147,7 +141,7 @@ export function ItemEditor({ item, onSave, onHide, onDelete, onClose }: ItemEdit
             {item && canDelete(item) && (
               <button
                 type="button"
-                class={cx(buttonStyle, dangerStyle)}
+                class={dangerButtonStyle}
                 onClick={() => (confirmingDelete ? onDelete() : setConfirmingDelete(true))}
               >
                 {confirmingDelete ? t('confirmDelete') : t('deleteItem')}

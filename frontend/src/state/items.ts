@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'preact/hooks';
 import { isIconId, type IconId } from '../icons/iconIds';
 import {
+  CATALOGUE,
   CATEGORIES,
   SEED_IDS,
   TEMPLATE_ITEM_IDS,
@@ -143,11 +144,17 @@ export function serializeItems(items: readonly Item[]): string {
   return JSON.stringify({ version: STORAGE_VERSION, items });
 }
 
-export function slugify(label: string): string {
-  const slug = label
+// Lowercased and without diacritics, so "blojor" finds "Blöjor".
+export function foldText(text: string): string {
+  return text
     .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
+    .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
+    .trim();
+}
+
+export function slugify(label: string): string {
+  const slug = foldText(label)
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
   return slug === '' ? 'item' : slug;
@@ -225,6 +232,39 @@ export function hiddenItems(items: readonly Item[]): Item[] {
   return items.filter((item) => item.hidden);
 }
 
+// Everything that could still be added: hidden items plus catalogue entries not on the list yet.
+export function availableItems(items: readonly Item[]): Item[] {
+  const present = new Set(items.map((item) => item.id));
+  const fresh = CATALOGUE.flatMap((entry) => (present.has(entry.id) ? [] : (catalogueItem(entry.id) ?? [])));
+  return [...hiddenItems(items), ...fresh];
+}
+
+// Unhides an item the user already has, or adds a catalogue item for the first time.
+export function includeItem(items: readonly Item[], id: string): Item[] {
+  if (items.some((item) => item.id === id)) return setHidden(items, id, false);
+  const item = catalogueItem(id);
+  return item ? [...items, item] : [...items];
+}
+
+export function searchItems(
+  candidates: readonly Item[],
+  labelOf: (item: Item) => string,
+  query: string,
+): Item[] {
+  const needle = foldText(query);
+  if (needle === '') return [...candidates];
+  return candidates.filter((item) => foldText(labelOf(item)).includes(needle));
+}
+
+export function findByLabel(
+  items: readonly Item[],
+  labelOf: (item: Item) => string,
+  query: string,
+): Item | undefined {
+  const needle = foldText(query);
+  return needle === '' ? undefined : items.find((item) => foldText(labelOf(item)) === needle);
+}
+
 // A weather is on when every one of its items is on the list and visible.
 export function templateActive(items: readonly Item[], template: TemplateId): boolean {
   return TEMPLATE_ITEM_IDS[template].every((id) => items.some((item) => item.id === id && !item.hidden));
@@ -246,6 +286,7 @@ export function useItemList(): {
   update: (id: string, patch: ItemPatch) => void;
   hide: (id: string, hidden: boolean) => void;
   remove: (id: string) => void;
+  include: (id: string) => void;
   setWeather: (template: TemplateId, active: boolean) => void;
 } {
   const [items, setItems] = useState<readonly Item[]>(() => parseItems(readStorage(ITEMS_STORAGE_KEY)));
@@ -260,6 +301,7 @@ export function useItemList(): {
     update: (id, patch) => setItems((current) => updateItem(current, id, patch)),
     hide: (id, hidden) => setItems((current) => setHidden(current, id, hidden)),
     remove: (id) => setItems((current) => removeItem(current, id)),
+    include: (id) => setItems((current) => includeItem(current, id)),
     setWeather: (template, active) => setItems((current) => setTemplate(current, template, active)),
   };
 }

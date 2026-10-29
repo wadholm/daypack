@@ -30,9 +30,10 @@ interface ItemListProps {
   editing: boolean;
   onToggle: (id: string) => void;
   onEdit: (id: string) => void;
+  onHide: (id: string) => void;
 }
 
-export function ItemList({ items, checked, editing, onToggle, onEdit }: ItemListProps) {
+export function ItemList({ items, checked, editing, onToggle, onEdit, onHide }: ItemListProps) {
   const { t } = useI18n();
 
   return (
@@ -49,6 +50,7 @@ export function ItemList({ items, checked, editing, onToggle, onEdit }: ItemList
               editing={editing}
               onToggle={onToggle}
               onEdit={onEdit}
+              onHide={onHide}
             />
           ))}
         </section>

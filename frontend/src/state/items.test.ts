@@ -14,7 +14,11 @@ import {
   updateItem,
   visibleItems,
   type Item,
+  availableItems,
   canDelete,
+  findByLabel,
+  includeItem,
+  searchItems,
   categoryOf,
   groupByCategory,
   setTemplate,
@@ -219,6 +223,48 @@ describe('categories', () => {
   it('lets an edit move an item to another category', () => {
     const next = updateItem(seed, 'diapers', { category: 'other' });
     expect(next[0]?.category).toBe('other');
+  });
+});
+
+describe('adding existing items', () => {
+  const labelOf = (item: Item) => item.label ?? item.id;
+
+  it('offers hidden items and catalogue entries that are not on the list', () => {
+    const items = setHidden(seed, 'pacifier', true);
+    const ids = availableItems(items).map((i) => i.id);
+    expect(ids[0]).toBe('pacifier');
+    expect(ids).toContain('pyjamas');
+    expect(ids).not.toContain('diapers');
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it('adds a catalogue item once, and unhides one the user already has', () => {
+    const added = includeItem(seed, 'pyjamas');
+    expect(added.at(-1)).toMatchObject({ id: 'pyjamas', builtin: true, label: null, hidden: false });
+    expect(includeItem(added, 'pyjamas')).toEqual(added);
+    const hidden = setHidden(added, 'pyjamas', true);
+    expect(includeItem(hidden, 'pyjamas')).toEqual(added);
+  });
+
+  it('ignores an unknown id', () => {
+    expect(includeItem(seed, 'nope')).toEqual(seed);
+  });
+
+  it('searches ignoring case and diacritics', () => {
+    const items = [
+      { ...seed[0]!, builtin: false, id: 'blojor', label: 'Blöjor' },
+      { ...seed[0]!, builtin: false, id: 'napp', label: 'Napp' },
+    ];
+    expect(searchItems(items, labelOf, 'BLOJ').map((i) => i.id)).toEqual(['blojor']);
+    expect(searchItems(items, labelOf, '  ').map((i) => i.id)).toEqual(['blojor', 'napp']);
+    expect(searchItems(items, labelOf, 'xyz')).toEqual([]);
+  });
+
+  it('finds an exact label match so duplicates are not created', () => {
+    const items = [{ ...seed[0]!, builtin: false, id: 'towel-2', label: 'Towel' }];
+    expect(findByLabel(items, labelOf, ' towel ')?.id).toBe('towel-2');
+    expect(findByLabel(items, labelOf, 'tow')).toBeUndefined();
+    expect(findByLabel(items, labelOf, '')).toBeUndefined();
   });
 });
 

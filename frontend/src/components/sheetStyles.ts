@@ -34,18 +34,28 @@ export const headingStyle = css({ margin: '0', fontSize: 'wordmark', fontWeight:
 
 export const actionsStyle = css({ display: 'flex', gap: '3' });
 
-export const buttonStyle = css({
+// Variants merge into one class (css with several objects) because separate single-class rules
+// for bg/color would fight over source order instead of the variant winning.
+const buttonBase = {
   flex: '1',
   minHeight: 'tapTarget',
   border: 'none',
   borderRadius: 'full',
-  bg: 'bg',
-  color: 'text',
   fontFamily: 'body',
   fontSize: 'meta',
   fontWeight: 'bold',
   cursor: 'pointer',
+} as const;
+
+export const buttonStyle = css(buttonBase, { bg: 'bg', color: 'text' });
+
+export const primaryButtonStyle = css(buttonBase, {
+  bg: 'brand',
+  color: 'onBrand',
+  _disabled: { opacity: 'dimmed', cursor: 'default' },
 });
+
+export const dangerButtonStyle = css(buttonBase, { bg: 'bg', color: 'danger' });
 
 export const formStyle = css({
   display: 'flex',
@@ -53,4 +63,17 @@ export const formStyle = css({
   gap: '4',
   padding: '5',
   paddingBottom: 'resetBarBottom',
+});
+
+export const inputStyle = css({
+  minHeight: 'tapTarget',
+  paddingInline: '4',
+  border: 'none',
+  borderRadius: 'reset',
+  bg: 'bg',
+  color: 'text',
+  fontFamily: 'body',
+  // 17px keeps iOS from zooming the page on focus.
+  fontSize: 'label',
+  fontWeight: 'semibold',
 });
