@@ -24,6 +24,7 @@ import {
   groupByCategory,
   setTemplate,
   templateActive,
+  templateState,
 } from './items';
 
 const seed = defaultItems();
@@ -299,6 +300,17 @@ describe('weather templates', () => {
     expect(next.slice(seed.length).every((i) => i.builtin && i.label === null && !i.hidden)).toBe(true);
     expect(templateActive(next, 'warm')).toBe(true);
     expect(templateActive(next, 'cold')).toBe(false);
+  });
+
+  it('reports partly on when the user hides some of a list by hand, and turning on restores it', () => {
+    const on = setTemplate(seed, 'overnight', true);
+    expect(templateState(seed, 'overnight')).toBe('off');
+    expect(templateState(on, 'overnight')).toBe('on');
+    const partial = setHidden(on, 'travel-cot', true);
+    expect(templateState(partial, 'overnight')).toBe('partial');
+    expect(templateActive(partial, 'overnight')).toBe(false);
+    expect(templateState(setTemplate(partial, 'overnight', true), 'overnight')).toBe('on');
+    expect(templateState(setTemplate(partial, 'overnight', false), 'overnight')).toBe('off');
   });
 
   it('turning on is idempotent and unhides items that were hidden', () => {

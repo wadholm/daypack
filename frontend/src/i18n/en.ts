@@ -102,6 +102,7 @@ export const en = {
   starter_outing: 'Out and about',
   starter_swim: 'Swimming',
   starterOn: 'On',
+  starterPartial: 'Partly on',
   starterOff: 'Off',
   hue_yellow: 'Yellow',
   hue_sky: 'Sky',

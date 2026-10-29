@@ -271,12 +271,21 @@ export function findByLabel(
   return needle === '' ? undefined : items.find((item) => foldText(labelOf(item)) === needle);
 }
 
-// A weather is on when every one of its items is on the list and visible.
-export function templateActive(items: readonly Item[], template: TemplateId): boolean {
-  return TEMPLATE_ITEM_IDS[template].every((id) => items.some((item) => item.id === id && !item.hidden));
+export type TemplateState = 'on' | 'partial' | 'off';
+
+// On when every item of the list is visible, off when none is, partial when the user has hidden some by hand.
+export function templateState(items: readonly Item[], template: TemplateId): TemplateState {
+  const ids = TEMPLATE_ITEM_IDS[template];
+  const shown = ids.filter((id) => items.some((item) => item.id === id && !item.hidden)).length;
+  if (shown === ids.length) return 'on';
+  return shown === 0 ? 'off' : 'partial';
 }
 
-// Turning a weather on adds what is missing and unhides the rest; turning it off only hides,
+export function templateActive(items: readonly Item[], template: TemplateId): boolean {
+  return templateState(items, template) === 'on';
+}
+
+// Turning a list on (also from partial) adds what is missing and unhides the rest; turning it off only hides,
 // so edits and notes survive switching back.
 export function setTemplate(items: readonly Item[], template: TemplateId, active: boolean): Item[] {
   const ids = new Set(TEMPLATE_ITEM_IDS[template]);

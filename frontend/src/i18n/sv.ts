@@ -103,6 +103,7 @@ export const sv: Dictionary = {
   starter_outing: 'Ute och på språng',
   starter_swim: 'Simning',
   starterOn: 'På',
+  starterPartial: 'Delvis på',
   starterOff: 'Av',
   hue_yellow: 'Gul',
   hue_sky: 'Himmelsblå',

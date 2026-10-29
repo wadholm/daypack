@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'preact/hooks';
 import { useI18n } from '../i18n/I18nProvider';
 import type { TranslationKey } from '../i18n/en';
 import { TEMPLATES, type TemplateId } from '../state/catalogue';
-import { templateActive, type Item } from '../state/items';
+import { templateState, type Item, type TemplateState } from '../state/items';
 import { actionsStyle, buttonStyle, dialogStyle, formStyle, headingStyle } from './sheetStyles';
 
 const TEMPLATE_KEYS: Record<TemplateId, TranslationKey> = {
@@ -13,6 +13,12 @@ const TEMPLATE_KEYS: Record<TemplateId, TranslationKey> = {
   overnight: 'starter_overnight',
   outing: 'starter_outing',
   swim: 'starter_swim',
+};
+
+const STATE_KEYS: Record<TemplateState, TranslationKey> = {
+  on: 'starterOn',
+  partial: 'starterPartial',
+  off: 'starterOff',
 };
 
 const introStyle = css({ margin: '0', color: 'textMuted', fontSize: 'meta', fontWeight: 'semibold' });
@@ -31,6 +37,9 @@ const optionStyle = css({
 const optionLabelStyle = css({ fontSize: 'label', fontWeight: 'semibold' });
 
 const optionStateStyle = css({ fontSize: 'meta', fontWeight: 'bold' });
+
+// Partly on keeps the neutral background but turns the state label to the brand colour.
+const partialStateStyle = css({ color: 'brand' });
 
 interface StarterListsProps {
   items: readonly Item[];
@@ -63,18 +72,20 @@ export function StarterLists({ items, onToggle, onClose }: StarterListsProps) {
         <h2 class={headingStyle}>{t('starterLists')}</h2>
         <p class={introStyle}>{t('starterIntro')}</p>
         {TEMPLATES.map((template) => {
-          const active = templateActive(items, template);
+          const state = templateState(items, template);
           return (
             <button
               key={template}
               type="button"
               role="switch"
-              aria-checked={active}
+              aria-checked={state === 'partial' ? 'mixed' : state === 'on'}
               class={cx(buttonStyle, optionStyle)}
-              onClick={() => onToggle(template, !active)}
+              onClick={() => onToggle(template, state !== 'on')}
             >
               <span class={optionLabelStyle}>{t(TEMPLATE_KEYS[template])}</span>
-              <span class={optionStateStyle}>{active ? t('starterOn') : t('starterOff')}</span>
+              <span class={cx(optionStateStyle, state === 'partial' && partialStateStyle)}>
+                {t(STATE_KEYS[state])}
+              </span>
             </button>
           );
         })}
