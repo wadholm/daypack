@@ -5,7 +5,7 @@ import { ItemIcon } from '../icons/ItemIcon';
 import { iconProps } from '../icons/svgProps';
 import type { Item } from '../state/items';
 import { checkHue, tileHue } from './hueStyles';
-import { labelStyle, noteStyle, rowStyle, textStyle, tileStyle } from './rowStyles';
+import { editRowStyle, labelStyle, noteStyle, rowStyle, textStyle, tileStyle } from './rowStyles';
 
 // The checkbox itself never dims, only the tile and label do.
 const checkboxStyle = css({
@@ -31,7 +31,29 @@ const tickStyle = css({
   _motionReduce: { animationDuration: 'none' },
 });
 
-const chevronStyle = css({ width: 'icon', height: 'icon', flexShrink: 0, color: 'textMuted' });
+const editMainStyle = css({ flex: '1', minWidth: 'zero' });
+
+const hideButtonStyle = css({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  flexShrink: 0,
+  width: 'tapTarget',
+  height: 'tapTarget',
+  marginInlineEnd: '2',
+  padding: '0',
+  border: 'none',
+  borderRadius: 'full',
+  bg: 'transparent',
+  color: 'textMuted',
+  cursor: 'pointer',
+});
+
+const editIconStyle = css({ width: 'icon', height: 'icon', flexShrink: 0, color: 'textMuted' });
+
+const dimmedStyle = css({ opacity: 'dimmed' });
+
+const hideIconStyle = css({ width: 'icon', height: 'icon' });
 
 interface ItemRowProps {
   item: Item;
@@ -39,10 +61,11 @@ interface ItemRowProps {
   editing: boolean;
   onToggle: (id: string) => void;
   onEdit: (id: string) => void;
+  onSetHidden: (id: string, hidden: boolean) => void;
 }
 
 // In pack mode a tap ticks the item; in edit mode the same row opens the editor instead.
-export function ItemRow({ item, checked, editing, onToggle, onEdit }: ItemRowProps) {
+export function ItemRow({ item, checked, editing, onToggle, onEdit, onSetHidden }: ItemRowProps) {
   const { t } = useI18n();
   const label = itemLabel(item, t);
 
@@ -60,17 +83,41 @@ export function ItemRow({ item, checked, editing, onToggle, onEdit }: ItemRowPro
 
   if (editing) {
     return (
-      <button
-        type="button"
-        class={rowStyle}
-        aria-label={t('editItemLabel', { name: label })}
-        onClick={() => onEdit(item.id)}
-      >
-        {content}
-        <svg {...iconProps} class={chevronStyle}>
-          <path d="M9 6l6 6-6 6" />
-        </svg>
-      </button>
+      <div class={editRowStyle}>
+        <button
+          type="button"
+          // Hidden items stay in the list while editing so the eye can toggle them back; Done drops them.
+          class={cx(rowStyle, editMainStyle, item.hidden && dimmedStyle)}
+          aria-label={t('editItemLabel', { name: label })}
+          onClick={() => onEdit(item.id)}
+        >
+          {content}
+          <svg {...iconProps} class={editIconStyle}>
+            <path d="M4 20h4L19 9l-4-4L4 16z" />
+            <path d="M13.5 6.5l4 4" />
+          </svg>
+        </button>
+        <button
+          type="button"
+          class={hideButtonStyle}
+          aria-label={t(item.hidden ? 'showItemLabel' : 'hideItemLabel', { name: label })}
+          onClick={() => onSetHidden(item.id, !item.hidden)}
+        >
+          <svg {...iconProps} class={hideIconStyle}>
+            {item.hidden ? (
+              <>
+                <path d="M2.5 12C3.5 10.2 7 6 12 6s8.5 4.2 9.5 6c-1 1.8-4.5 6-9.5 6s-8.5-4.2-9.5-6z" />
+                <circle cx="12" cy="12" r="3" />
+              </>
+            ) : (
+              <>
+                <path d="M3 3l18 18" />
+                <path d="M10.6 6.1A9.8 9.8 0 0 1 12 6c5 0 8.5 4.2 9.5 6-.4.8-1.2 2-2.3 3.1M6.7 7.3C4.6 8.7 3.2 10.8 2.5 12c1 1.8 4.5 6 9.5 6 1.5 0 2.9-.4 4.1-1M9.9 9.9a3 3 0 0 0 4.2 4.2" />
+              </>
+            )}
+          </svg>
+        </button>
+      </div>
     );
   }
 

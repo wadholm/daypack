@@ -22,6 +22,19 @@ export const rowStyle = css({
   },
 });
 
+// Edit mode splits the row into an edit button and a hide button, so it can't be one <button>.
+export const editRowStyle = css({
+  display: 'flex',
+  alignItems: 'center',
+  width: 'full',
+  minHeight: 'row',
+  '& + &': {
+    borderTopWidth: 'divider',
+    borderTopStyle: 'solid',
+    borderTopColor: 'divider',
+  },
+});
+
 const fadeStyle = {
   transitionProperty: 'opacity',
   transitionDuration: 'fade',

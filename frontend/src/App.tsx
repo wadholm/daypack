@@ -1,15 +1,16 @@
 import { css } from '../styled-system/css';
 import { useState } from 'preact/hooks';
+import { AddItem } from './components/AddItem';
 import { BottomBar } from './components/BottomBar';
-import { HiddenItems } from './components/HiddenItems';
 import { ItemEditor } from './components/ItemEditor';
 import { ItemList } from './components/ItemList';
 import { ListActions } from './components/ListActions';
+import { StarterLists } from './components/StarterLists';
 import { Progress } from './components/Progress';
 import { TopBar } from './components/TopBar';
 import { useI18n } from './i18n/I18nProvider';
 import { countPacked, progressPercent, useChecked } from './state/checked';
-import { hiddenItems, useItemList, visibleItems } from './state/items';
+import { editableItems, useItemList, visibleItems } from './state/items';
 
 // 'new' opens the editor for a fresh custom item; a string is the id being edited.
 type EditorTarget = 'new' | string | null;
@@ -60,7 +61,13 @@ export function App() {
   const list = useItemList();
   const { checked, toggle, forget, reset } = useChecked();
   const [editing, setEditing] = useState(false);
+  // Ids on the list when editing began; see editableItems.
+  const [editStart, setEditStart] = useState<ReadonlySet<string>>(new Set());
   const [editorTarget, setEditorTarget] = useState<EditorTarget>(null);
+  const [startersOpen, setStartersOpen] = useState(false);
+  const [adding, setAdding] = useState(false);
+  // Name typed in the add sheet when nothing matched; prefills the editor for the new item.
+  const [draftLabel, setDraftLabel] = useState('');
 
   const visible = visibleItems(list.items);
   const packed = countPacked(visible.map((item) => item.id), checked);
@@ -78,19 +85,53 @@ export function App() {
           <h1 class={titleStyle}>{t('title')}</h1>
           <Progress packed={packed} total={visible.length} percent={percent} />
         </header>
-        <ItemList items={visible} checked={checked} editing={editing} onToggle={toggle} onEdit={setEditorTarget} />
-        <ListActions editing={editing} onAdd={() => setEditorTarget('new')} onEditList={() => setEditing(true)} />
-        {editing && <HiddenItems items={hiddenItems(list.items)} onShow={(id) => list.hide(id, false)} />}
+        <ItemList
+          items={editing ? editableItems(list.items, editStart) : visible}
+          checked={checked}
+          editing={editing}
+          onToggle={toggle}
+          onEdit={setEditorTarget}
+          onSetHidden={list.hide}
+        />
+        <ListActions
+          editing={editing}
+          onAdd={() => setAdding(true)}
+          onEditList={() => {
+            setEditStart(new Set(visible.map((item) => item.id)));
+            setEditing(true);
+          }}
+          onStarters={() => setStartersOpen(true)}
+        />
       </div>
       <BottomBar
         label={editing ? t('done') : t('reset')}
         onPress={editing ? () => setEditing(false) : reset}
       />
+      {adding && (
+        <AddItem
+          items={list.items}
+          onInclude={list.include}
+          onCreate={(label) => {
+            setAdding(false);
+            setDraftLabel(label);
+            setEditorTarget('new');
+          }}
+          onClose={() => setAdding(false)}
+        />
+      )}
+      {startersOpen && (
+        <StarterLists
+          items={list.items}
+          onToggle={list.setWeather}
+          onClose={() => setStartersOpen(false)}
+        />
+      )}
       {editorTarget !== null && (
         <ItemEditor
           // Remount per target so the form fields reset.
           key={editorTarget}
           item={editedItem}
+          initialLabel={draftLabel}
           onClose={closeEditor}
           onSave={(draft) => {
             if (editedItem) list.update(editedItem.id, draft);
