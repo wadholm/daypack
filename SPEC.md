@@ -70,16 +70,18 @@ localStorage keys: `daypack.checked` (JSON array of ids), `daypack.theme`, `dayp
 
 One Cloudflare Worker (free plan). Root `wrangler.jsonc`: `main` → `backend/src/index.ts`, `assets.directory` → `frontend/dist`, `not_found_handling: "single-page-application"`, `run_worker_first: ["/api/*"]`. Hono serves only `/api`; everything else is static assets with SPA fallback. Local dev: Vite dev server proxies `/api` to `wrangler dev`.
 
+Live: https://daypack.wadholm.workers.dev (workers.dev subdomain `wadholm`, Worker name `daypack`).
+
 ## Task checklist
 
-- [ ] 1. Root workspace (npm workspaces, TS base config, ESLint, Vitest)
-- [ ] 2. Backend: Hono `/api/items` + tests + `wrangler.jsonc`
-- [ ] 3. Frontend scaffold: Vite + Preact + TS + Panda, `/api` proxy
-- [ ] 4. Panda tokens, conditions and font from DESIGN.md
-- [ ] 5. Theme: inline script, store, switch
-- [ ] 6. i18n: typed dictionaries, language store, `<html lang>`
-- [ ] 7. Checked-state storage and progress logic
-- [ ] 8. UI: header, list, checkbox, progress, Reset, motion
-- [ ] 9. Wire the UI to `/api/items`, keep state across language switches
-- [ ] 10. Single-Worker build and deploy
-- [ ] 11. Final gate: lint, typecheck, test, build
+- [x] 1. Root workspace (npm workspaces, TS base config, ESLint, Vitest)
+- [x] 2. Backend: Hono `/api/items` + tests + `wrangler.jsonc`
+- [x] 3. Frontend scaffold: Vite + Preact + TS + Panda, `/api` proxy
+- [x] 4. Panda tokens, conditions and font from DESIGN.md
+- [x] 5. Theme: inline script, store, switch
+- [x] 6. i18n: typed dictionaries, language store, `<html lang>`
+- [x] 7. Checked-state storage and progress logic
+- [x] 8. UI: header, list, checkbox, progress, Reset, motion (tick-pop and reduced-motion behaviour not yet visually verified)
+- [x] 9. Wire the UI to `/api/items`, keep state across language switches
+- [x] 10. Single-Worker build and deploy
+- [x] 11. Final gate: lint, typecheck, test, build

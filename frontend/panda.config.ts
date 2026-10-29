@@ -63,7 +63,8 @@ export default defineConfig({
         },
       },
       fontSizes: {
-        title: { value: '31px' },
+        // 31px per DESIGN.md, shrunk on narrow screens so the title never wraps.
+        title: { value: 'min(31px, 7.8vw)' },
         wordmark: { value: '20px' },
         label: { value: '17px' },
         meta: { value: '15px' },
@@ -90,9 +91,18 @@ export default defineConfig({
         '6': { value: '24px' },
         '8': { value: '32px' },
         resetBottom: { value: '34px' },
+        // Safe-area aware paddings: env() only resolves at runtime, so they live here as tokens.
+        pageTop: { value: 'calc({spacing.3} + env(safe-area-inset-top))' },
+        resetBarBottom: { value: 'calc({spacing.resetBottom} + env(safe-area-inset-bottom))' },
+        pageBottom: { value: 'calc({sizes.reset} + {spacing.resetBottom} + env(safe-area-inset-bottom) + {spacing.8})' },
       },
       sizes: {
         full: { value: '100%' },
+        viewport: { value: '100dvh' },
+        tickGlyph: { value: '60%' },
+        content: { value: '480px' },
+        icon: { value: '22px' },
+        logo: { value: '28px' },
         tapTarget: { value: '48px' },
         row: { value: '56px' },
         iconTile: { value: '38px' },
@@ -110,7 +120,15 @@ export default defineConfig({
         reset: { value: '18px' },
         full: { value: '9999px' },
       },
+      opacity: {
+        dimmed: { value: '0.45' },
+      },
+      easings: {
+        out: { value: 'cubic-bezier(0, 0, 0.2, 1)' },
+      },
       durations: {
+        // Swapped in under prefers-reduced-motion.
+        none: { value: '0ms' },
         tick: { value: '360ms' },
         fade: { value: '280ms' },
         progress: { value: '500ms' },

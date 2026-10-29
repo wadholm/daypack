@@ -6,7 +6,9 @@
     "dev": "wrangler dev --config ../wrangler.jsonc",
     "types": "wrangler types --config ../wrangler.jsonc",
     "typecheck": "tsc -p .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "deploy": "wrangler deploy --config ../wrangler.jsonc",
+    "deploy:dry-run": "wrangler deploy --dry-run --config ../wrangler.jsonc"
   },
   "dependencies": {
     "hono": "^4.13.14"

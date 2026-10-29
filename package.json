@@ -9,7 +9,11 @@
   "scripts": {
     "typecheck": "npm run typecheck --workspaces --if-present",
     "lint": "eslint .",
-    "test": "npm run test --workspaces --if-present"
+    "test": "npm run test --workspaces --if-present",
+    "check": "npm run lint && npm run typecheck && npm test",
+    "build": "npm run build -w frontend",
+    "preview": "npm run build && npm run dev -w backend",
+    "deploy": "npm run check && npm run build && npm run deploy -w backend"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
