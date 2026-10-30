@@ -4,7 +4,8 @@ import { readStorage, writeStorage } from './safeStorage';
 
 export const DESTINATION_STORAGE_KEY = 'daypack.destination';
 
-// Ids are persisted inside items and checked state, so never rename one.
+// Ids are persisted inside items and checked state, so never rename one; only the labels (destination_*) are
+// user-facing. 'grandparents' is shown as Mälarhöjden.
 export const DESTINATIONS = ['daycare', 'grandparents'] as const;
 export type DestinationId = (typeof DESTINATIONS)[number];
 
