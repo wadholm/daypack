@@ -1,4 +1,5 @@
 import { css } from '../../styled-system/css';
+import { VIEW_AT_KEYS, type DestinationId } from '../state/destinations';
 import { useI18n } from '../i18n/I18nProvider';
 
 export type View = 'pack' | 'daycare';
@@ -15,6 +16,8 @@ const groupStyle = css({
 
 const segmentStyle = css({
   minHeight: 'tapTarget',
+  // Longer place names wrap rather than overflow on a narrow phone.
+  paddingInline: '2',
   border: 'none',
   borderRadius: 'full',
   bg: 'transparent',
@@ -28,10 +31,11 @@ const segmentStyle = css({
 
 interface ViewSwitchProps {
   view: View;
+  destination: DestinationId;
   onChange: (view: View) => void;
 }
 
-export function ViewSwitch({ view, onChange }: ViewSwitchProps) {
+export function ViewSwitch({ view, destination, onChange }: ViewSwitchProps) {
   const { t } = useI18n();
 
   return (
@@ -45,7 +49,7 @@ export function ViewSwitch({ view, onChange }: ViewSwitchProps) {
         aria-pressed={view === 'daycare'}
         onClick={() => onChange('daycare')}
       >
-        {t('viewDaycare')}
+        {t(VIEW_AT_KEYS[destination])}
       </button>
     </div>
   );

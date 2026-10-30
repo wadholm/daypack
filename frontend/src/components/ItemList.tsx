@@ -1,7 +1,8 @@
 import { css } from '../../styled-system/css';
 import { CATEGORY_KEYS } from '../i18n/categoryKeys';
+import type { DestinationId } from '../state/destinations';
 import { useI18n } from '../i18n/I18nProvider';
-import { groupByCategory, type Item } from '../state/items';
+import { groupByCategory, packQuantity, type Item } from '../state/items';
 import { ItemRow } from './ItemRow';
 import { cardStyle } from './rowStyles';
 
@@ -27,6 +28,7 @@ const headingStyle = css({
 interface ItemListProps {
   items: readonly Item[];
   emptyText: string;
+  destination: DestinationId;
   checked: ReadonlySet<string>;
   editing: boolean;
   onToggle: (id: string) => void;
@@ -34,7 +36,7 @@ interface ItemListProps {
   onSetHidden: (id: string, hidden: boolean) => void;
 }
 
-export function ItemList({ items, emptyText, checked, editing, onToggle, onEdit, onSetHidden }: ItemListProps) {
+export function ItemList({ items, emptyText, destination, checked, editing, onToggle, onEdit, onSetHidden }: ItemListProps) {
   const { t } = useI18n();
 
   return (
@@ -47,6 +49,7 @@ export function ItemList({ items, emptyText, checked, editing, onToggle, onEdit,
             <ItemRow
               key={item.id}
               item={item}
+              quantity={packQuantity(item, destination)}
               checked={checked.has(item.id)}
               editing={editing}
               onToggle={onToggle}

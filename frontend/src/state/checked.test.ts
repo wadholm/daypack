@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   countPacked,
+  emptyChecked,
   parseChecked,
   progressPercent,
   serializeChecked,
@@ -9,22 +10,31 @@ import {
 } from './checked';
 
 describe('parseChecked', () => {
-  it('reads a stored id list', () => {
-    expect(parseChecked('["diapers","sun-hat"]')).toEqual(new Set(['diapers', 'sun-hat']));
+  it('reads ticks per destination', () => {
+    const state = parseChecked('{"daycare":["diapers"],"grandparents":["sun-hat"]}');
+    expect(state.daycare).toEqual(new Set(['diapers']));
+    expect(state.grandparents).toEqual(new Set(['sun-hat']));
+  });
+
+  it('gives the old plain id list to the daycare', () => {
+    const state = parseChecked('["diapers","sun-hat"]');
+    expect(state.daycare).toEqual(new Set(['diapers', 'sun-hat']));
+    expect(state.grandparents).toEqual(new Set());
   });
 
   it('treats missing or corrupt storage as nothing checked', () => {
-    expect(parseChecked(null)).toEqual(new Set());
-    expect(parseChecked('not json')).toEqual(new Set());
-    expect(parseChecked('{"a":1}')).toEqual(new Set());
+    expect(parseChecked(null)).toEqual(emptyChecked());
+    expect(parseChecked('not json')).toEqual(emptyChecked());
+    expect(parseChecked('5')).toEqual(emptyChecked());
+    expect(parseChecked('{"daycare":"x"}')).toEqual(emptyChecked());
   });
 
   it('drops entries that are not strings', () => {
-    expect(parseChecked('["diapers",1,null,{}]')).toEqual(new Set(['diapers']));
+    expect(parseChecked('{"daycare":["diapers",1,null,{}]}').daycare).toEqual(new Set(['diapers']));
   });
 
   it('round-trips through serializeChecked', () => {
-    const checked = new Set(['pacifier', 'rain-gear']);
+    const checked = { daycare: new Set(['pacifier']), grandparents: new Set(['rain-gear']), as: new Set(['towel']) };
     expect(parseChecked(serializeChecked(checked))).toEqual(checked);
   });
 });

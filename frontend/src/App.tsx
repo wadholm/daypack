@@ -4,15 +4,17 @@ import { AddItem } from './components/AddItem';
 import { BottomBar } from './components/BottomBar';
 import { ItemEditor } from './components/ItemEditor';
 import { ItemList } from './components/ItemList';
-import { DaycareList } from './components/DaycareList';
+import { DestinationList } from './components/DestinationList';
+import { DestinationPicker } from './components/DestinationPicker';
 import { ListActions } from './components/ListActions';
 import { StarterLists } from './components/StarterLists';
 import { Progress } from './components/Progress';
 import { TopBar } from './components/TopBar';
 import { ViewSwitch, type View } from './components/ViewSwitch';
 import { useI18n } from './i18n/I18nProvider';
+import { TRACKS_STOCK, useDestination } from './state/destinations';
 import { countPacked, progressPercent, useChecked } from './state/checked';
-import { daycareItems, editableItems, packItems, useItemList, visibleItems } from './state/items';
+import { destinationItems, editableItems, packItems, useItemList, visibleItems } from './state/items';
 
 // 'new' opens the editor for a fresh custom item; a string is the id being edited.
 type EditorTarget = 'new' | string | null;
@@ -44,6 +46,8 @@ const headerStyle = css({
   paddingBlock: '4',
 });
 
+const dateRowStyle = css({ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '3' });
+
 const dateStyle = css({ fontSize: 'meta', fontWeight: 'semibold', color: 'textMuted' });
 
 const titleStyle = css({
@@ -61,7 +65,8 @@ function formatToday(locale: string): string {
 export function App() {
   const { t } = useI18n();
   const list = useItemList();
-  const { checked, toggle, forget, reset } = useChecked();
+  const { destination, setDestination } = useDestination();
+  const { checked, toggle, forget, reset } = useChecked(destination);
   const [view, setView] = useState<View>('pack');
   const [editing, setEditing] = useState(false);
   // Ids on the list when editing began; see editableItems.
@@ -73,12 +78,13 @@ export function App() {
   const [draftLabel, setDraftLabel] = useState('');
 
   const visible = visibleItems(list.items);
-  const toPack = packItems(list.items);
+  const toPack = packItems(list.items, destination);
   const packed = countPacked(toPack.map((item) => item.id), checked);
   const percent = progressPercent(packed, toPack.length);
   const editedItem = list.items.find((item) => item.id === editorTarget) ?? null;
   // Editing works on the full list whichever view it started from, so the pack-style rows serve both.
-  const showPackList = view === 'pack' || editing;
+  const tracksStock = TRACKS_STOCK[destination];
+  const showPackList = view === 'pack' || editing || !tracksStock;
   const closeEditor = () => setEditorTarget(null);
 
   return (
@@ -87,15 +93,19 @@ export function App() {
       <div class={contentStyle}>
         <TopBar />
         <header class={headerStyle}>
-          <span class={dateStyle}>{formatToday(t('dateLocale'))}</span>
+          <div class={dateRowStyle}>
+            <span class={dateStyle}>{formatToday(t('dateLocale'))}</span>
+            <DestinationPicker value={destination} onChange={setDestination} />
+          </div>
           <h1 class={titleStyle}>{t('title')}</h1>
           <Progress packed={packed} total={toPack.length} percent={percent} />
         </header>
-        {!editing && <ViewSwitch view={view} onChange={setView} />}
+        {!editing && tracksStock && <ViewSwitch view={view} destination={destination} onChange={setView} />}
         {showPackList ? (
           <ItemList
             items={editing ? editableItems(list.items, editStart) : toPack}
-            emptyText={t(visible.length === 0 ? 'emptyList' : 'allAtDaycare')}
+            emptyText={t(visible.length === 0 ? 'emptyList' : 'allCovered')}
+            destination={destination}
             checked={checked}
             editing={editing}
             onToggle={toggle}
@@ -103,7 +113,11 @@ export function App() {
             onSetHidden={list.hide}
           />
         ) : (
-          <DaycareList items={daycareItems(list.items)} onSetStock={list.setStock} />
+          <DestinationList
+            items={destinationItems(list.items, destination)}
+            destination={destination}
+            onSetStock={(id, stock) => list.setStock(id, destination, stock)}
+          />
         )}
         <ListActions
           editing={editing}
@@ -145,6 +159,7 @@ export function App() {
           // Remount per target so the form fields reset.
           key={editorTarget}
           item={editedItem}
+          destination={destination}
           initialLabel={draftLabel}
           onClose={closeEditor}
           onSave={(draft) => {
