@@ -7,5 +7,14 @@
     "directory": "frontend/dist",
     "not_found_handling": "single-page-application",
     "run_worker_first": ["/api/*"]
-  }
+  },
+  // database_id is a placeholder: `wrangler d1 create daypack` prints the real one to put here before deploying.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "daypack",
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "backend/migrations"
+    }
+  ]
 }
