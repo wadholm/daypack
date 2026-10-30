@@ -12,7 +12,7 @@ import {
   type Category,
   type TemplateId,
 } from './catalogue';
-import { byDestination, perDestination, type DestinationId, type PerDestination } from './destinations';
+import { TRACKS_STOCK, byDestination, perDestination, type DestinationId, type PerDestination } from './destinations';
 import { readStorage, writeStorage } from './safeStorage';
 
 export const ITEMS_STORAGE_KEY = 'daypack.items';
@@ -272,7 +272,8 @@ export function visibleItems(items: readonly Item[]): Item[] {
 // How many to put in the bag: daily items always bring their full amount, the rest only top up what is already there.
 export function packQuantity(item: Item, destination: DestinationId): number {
   const target = item.target[destination];
-  return item.daily ? target : Math.max(0, target - item.stock[destination]);
+  const stock = TRACKS_STOCK[destination] ? item.stock[destination] : 0;
+  return item.daily ? target : Math.max(0, target - stock);
 }
 
 // Ticking an item never touches the stock; stock only changes in the At view.

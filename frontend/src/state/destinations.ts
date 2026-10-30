@@ -6,7 +6,7 @@ export const DESTINATION_STORAGE_KEY = 'daypack.destination';
 
 // Ids are persisted inside items and checked state, so never rename one; only the labels (destination_*) are
 // user-facing. 'grandparents' is shown as Mälarhöjden.
-export const DESTINATIONS = ['daycare', 'grandparents'] as const;
+export const DESTINATIONS = ['daycare', 'grandparents', 'as'] as const;
 export type DestinationId = (typeof DESTINATIONS)[number];
 
 export const DEFAULT_DESTINATION: DestinationId = 'daycare';
@@ -14,13 +14,19 @@ export const DEFAULT_DESTINATION: DestinationId = 'daycare';
 export const DESTINATION_KEYS: Record<DestinationId, TranslationKey> = {
   daycare: 'destination_daycare',
   grandparents: 'destination_grandparents',
+  as: 'destination_as',
 };
 
 // Spelled out because the sv preposition differs per place ("På dagis", "Hos ...").
 export const VIEW_AT_KEYS: Record<DestinationId, TranslationKey> = {
   daycare: 'viewAt_daycare',
   grandparents: 'viewAt_grandparents',
+  as: 'viewAt_as',
 };
+
+// Where an inventory is kept. A destination without one (Ås) just gets everything that is wanted, so it has
+// no At view and its stock is ignored.
+export const TRACKS_STOCK: Record<DestinationId, boolean> = { daycare: true, grandparents: true, as: false };
 
 export function isDestination(value: unknown): value is DestinationId {
   return typeof value === 'string' && (DESTINATIONS as readonly string[]).includes(value);
@@ -31,7 +37,7 @@ export type PerDestination = Record<DestinationId, number>;
 
 // The one place that spells out every destination, so a new one is a compile error here and nowhere else.
 export function byDestination<T>(valueFor: (id: DestinationId) => T): Record<DestinationId, T> {
-  return { daycare: valueFor('daycare'), grandparents: valueFor('grandparents') };
+  return { daycare: valueFor('daycare'), grandparents: valueFor('grandparents'), as: valueFor('as') };
 }
 
 export function perDestination(value: number): PerDestination {

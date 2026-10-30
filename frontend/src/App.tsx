@@ -12,7 +12,7 @@ import { Progress } from './components/Progress';
 import { TopBar } from './components/TopBar';
 import { ViewSwitch, type View } from './components/ViewSwitch';
 import { useI18n } from './i18n/I18nProvider';
-import { useDestination } from './state/destinations';
+import { TRACKS_STOCK, useDestination } from './state/destinations';
 import { countPacked, progressPercent, useChecked } from './state/checked';
 import { destinationItems, editableItems, packItems, useItemList, visibleItems } from './state/items';
 
@@ -83,7 +83,8 @@ export function App() {
   const percent = progressPercent(packed, toPack.length);
   const editedItem = list.items.find((item) => item.id === editorTarget) ?? null;
   // Editing works on the full list whichever view it started from, so the pack-style rows serve both.
-  const showPackList = view === 'pack' || editing;
+  const tracksStock = TRACKS_STOCK[destination];
+  const showPackList = view === 'pack' || editing || !tracksStock;
   const closeEditor = () => setEditorTarget(null);
 
   return (
@@ -99,7 +100,7 @@ export function App() {
           <h1 class={titleStyle}>{t('title')}</h1>
           <Progress packed={packed} total={toPack.length} percent={percent} />
         </header>
-        {!editing && <ViewSwitch view={view} destination={destination} onChange={setView} />}
+        {!editing && tracksStock && <ViewSwitch view={view} destination={destination} onChange={setView} />}
         {showPackList ? (
           <ItemList
             items={editing ? editableItems(list.items, editStart) : toPack}

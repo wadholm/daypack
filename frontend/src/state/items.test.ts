@@ -417,8 +417,8 @@ describe('destination stock', () => {
   });
 
   it('wants five diapers and three socks by default, at every destination', () => {
-    expect(byId(seed, 'diapers').target).toEqual({ daycare: 5, grandparents: 5 });
-    expect(byId(seed, 'socks').target).toEqual({ daycare: 3, grandparents: 3 });
+    expect(byId(seed, 'diapers').target).toEqual({ daycare: 5, grandparents: 5, as: 5 });
+    expect(byId(seed, 'socks').target).toEqual({ daycare: 3, grandparents: 3, as: 3 });
   });
 
   it('packs target minus stock, never below zero', () => {
@@ -441,8 +441,20 @@ describe('destination stock', () => {
     expect(packItems(both, 'daycare').some((item) => item.id === 'diapers')).toBe(true);
   });
 
+  it('ignores stock at a destination that does not track it', () => {
+    const items = setStock(setStock(seed, 'diapers', 'as', 5), 'diapers', 'daycare', 5);
+    expect(packQuantity(byId(items, 'diapers'), 'as')).toBe(5);
+    expect(packQuantity(byId(items, 'diapers'), 'daycare')).toBe(0);
+    expect(packItems(items, 'as').some((item) => item.id === 'diapers')).toBe(true);
+  });
+
+  it('still leaves out of a stockless destination whatever it wants none of', () => {
+    const items = updateItem(seed, 'diapers', { target: { daycare: 5, grandparents: 5, as: 0 } });
+    expect(packItems(items, 'as').some((item) => item.id === 'diapers')).toBe(false);
+  });
+
   it('leaves out of a destination whatever it wants none of', () => {
-    const items = updateItem(seed, 'diapers', { target: { daycare: 5, grandparents: 0 } });
+    const items = updateItem(seed, 'diapers', { target: { daycare: 5, grandparents: 0, as: 5 } });
     expect(packItems(items, 'grandparents').some((item) => item.id === 'diapers')).toBe(false);
     expect(destinationItems(items, 'grandparents').some((item) => item.id === 'diapers')).toBe(false);
     expect(destinationItems(items, 'daycare').some((item) => item.id === 'diapers')).toBe(true);
@@ -458,7 +470,7 @@ describe('destination stock', () => {
   it('brings an item back when its target rises above the stock', () => {
     const covered = setStock(seed, 'socks', 'daycare', 3);
     expect(packItems(covered, 'daycare').some((item) => item.id === 'socks')).toBe(false);
-    const raised = updateItem(covered, 'socks', { target: { daycare: 4, grandparents: 3 } });
+    const raised = updateItem(covered, 'socks', { target: { daycare: 4, grandparents: 3, as: 3 } });
     expect(packItems(raised, 'daycare').some((item) => item.id === 'socks')).toBe(true);
   });
 
@@ -477,11 +489,11 @@ describe('destination stock', () => {
       icon: 'star',
       category: 'other',
       note: '',
-      target: { daycare: 2, grandparents: 0 },
+      target: { daycare: 2, grandparents: 0, as: 1 },
       daily: true,
     });
     expect(byId(items, 'rattle')).toMatchObject({
-      target: { daycare: 2, grandparents: 0 },
+      target: { daycare: 2, grandparents: 0, as: 1 },
       daily: true,
       stock: perDestination(0),
     });
@@ -490,14 +502,14 @@ describe('destination stock', () => {
   it('migrates version 1 numbers to the daycare and keeps the default elsewhere', () => {
     const raw = JSON.stringify({ version: 1, items: [{ id: 'socks', builtin: true, target: 4, stock: 2 }] });
     const [socks] = parseItems(raw);
-    expect(socks?.target).toEqual({ daycare: 4, grandparents: 3 });
-    expect(socks?.stock).toEqual({ daycare: 2, grandparents: 0 });
+    expect(socks?.target).toEqual({ daycare: 4, grandparents: 3, as: 3 });
+    expect(socks?.stock).toEqual({ daycare: 2, grandparents: 0, as: 0 });
   });
 
   it('reads per-destination counts and repairs bad entries', () => {
     const raw = stored([{ id: 'socks', builtin: true, target: { daycare: 2, grandparents: 'x' }, stock: { daycare: -1 } }]);
     const [socks] = parseItems(raw.replace('"version":1', '"version":2'));
-    expect(socks?.target).toEqual({ daycare: 2, grandparents: 3 });
+    expect(socks?.target).toEqual({ daycare: 2, grandparents: 3, as: 3 });
     expect(socks?.stock).toEqual(perDestination(0));
   });
 

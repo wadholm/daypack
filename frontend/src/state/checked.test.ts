@@ -34,7 +34,7 @@ describe('parseChecked', () => {
   });
 
   it('round-trips through serializeChecked', () => {
-    const checked = { daycare: new Set(['pacifier']), grandparents: new Set(['rain-gear']) };
+    const checked = { daycare: new Set(['pacifier']), grandparents: new Set(['rain-gear']), as: new Set(['towel']) };
     expect(parseChecked(serializeChecked(checked))).toEqual(checked);
   });
 });

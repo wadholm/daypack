@@ -86,6 +86,8 @@ export const en = {
   viewPack: 'Pack',
   viewAt_daycare: 'At daycare',
   viewAt_grandparents: 'At Mälarhöjden',
+  destination_as: 'Ås',
+  viewAt_as: 'At Ås',
   destinationLabel: 'Destination',
   destination_daycare: 'Daycare',
   destination_grandparents: 'Mälarhöjden',

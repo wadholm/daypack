@@ -87,6 +87,8 @@ export const sv: Dictionary = {
   viewPack: 'Packa',
   viewAt_daycare: 'På dagis',
   viewAt_grandparents: 'I Mälarhöjden',
+  destination_as: 'Ås',
+  viewAt_as: 'På Ås',
   destinationLabel: 'Plats',
   destination_daycare: 'Dagis',
   destination_grandparents: 'Mälarhöjden',
