@@ -26,6 +26,7 @@ const headingStyle = css({
 
 interface ItemListProps {
   items: readonly Item[];
+  emptyText: string;
   checked: ReadonlySet<string>;
   editing: boolean;
   onToggle: (id: string) => void;
@@ -33,12 +34,12 @@ interface ItemListProps {
   onSetHidden: (id: string, hidden: boolean) => void;
 }
 
-export function ItemList({ items, checked, editing, onToggle, onEdit, onSetHidden }: ItemListProps) {
+export function ItemList({ items, emptyText, checked, editing, onToggle, onEdit, onSetHidden }: ItemListProps) {
   const { t } = useI18n();
 
   return (
     <div class={cardStyle} role="group" aria-label={t('title')}>
-      {items.length === 0 && <p class={emptyStyle}>{t('emptyList')}</p>}
+      {items.length === 0 && <p class={emptyStyle}>{emptyText}</p>}
       {groupByCategory(items).map((group) => (
         <section key={group.category}>
           <h2 class={headingStyle}>{t(CATEGORY_KEYS[group.category])}</h2>

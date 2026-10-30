@@ -81,6 +81,12 @@ export function catalogueEntry(id: string): CatalogueEntry | undefined {
 // the sun hat arrive with their starter list instead of cluttering every day.
 export const SEED_IDS: readonly string[] = ['diapers', 'pacifier', 'cuddly-toy', 'socks', 'water-bottle'];
 
+// Packed every day whatever the daycare stock says: a pacifier or bottle comes home each evening.
+export const DAILY_IDS: readonly string[] = ['pacifier', 'water-bottle'];
+
+// How many a daycare wants on hand; everything else defaults to one.
+export const DEFAULT_TARGETS: Readonly<Record<string, number>> = { diapers: 5, socks: 3 };
+
 // Each template owns its items and none overlap, so switching one off never hides what another needs.
 // Everyday items (diapers, socks, water bottle) stay out of every template for the same reason.
 export const TEMPLATE_ITEM_IDS: Record<TemplateId, readonly string[]> = {
