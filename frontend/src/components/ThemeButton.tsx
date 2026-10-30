@@ -7,7 +7,8 @@ interface ThemeButtonProps {
   onChange: (pref: ThemePref) => void;
 }
 
-const buttonStyle = css({
+// Also used by the other round top-bar buttons.
+export const chipButtonStyle = css({
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -61,7 +62,7 @@ function ThemeIcon({ pref }: { pref: ThemePref }) {
 
 export function ThemeButton({ pref, label, onChange }: ThemeButtonProps) {
   return (
-    <button type="button" class={buttonStyle} aria-label={label} onClick={() => onChange(nextThemePref(pref))}>
+    <button type="button" class={chipButtonStyle} aria-label={label} onClick={() => onChange(nextThemePref(pref))}>
       <ThemeIcon pref={pref} />
     </button>
   );

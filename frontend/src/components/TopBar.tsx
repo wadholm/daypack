@@ -3,6 +3,7 @@ import { useI18n } from '../i18n/I18nProvider';
 import type { TranslationKey } from '../i18n/en';
 import { LogoIcon } from '../icons/LogoIcon';
 import { useTheme, type ThemePref } from '../state/theme';
+import { HouseholdButton } from './HouseholdButton';
 import { LangSwitch } from './LangSwitch';
 import { ThemeButton } from './ThemeButton';
 
@@ -32,7 +33,12 @@ const brandStyle = css({
 
 const controlsStyle = css({ display: 'flex', alignItems: 'center', gap: '2' });
 
-export function TopBar() {
+interface TopBarProps {
+  shared: boolean;
+  onHousehold: () => void;
+}
+
+export function TopBar({ shared, onHousehold }: TopBarProps) {
   const { t } = useI18n();
   const { pref, setPref } = useTheme();
 
@@ -43,6 +49,7 @@ export function TopBar() {
         <span>{t('wordmark')}</span>
       </div>
       <div class={controlsStyle}>
+        <HouseholdButton label={t('household')} connected={shared} onPress={onHousehold} />
         <LangSwitch />
         <ThemeButton
           pref={pref}

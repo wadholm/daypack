@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import { isIconId, type IconId } from '../icons/iconIds';
 import {
   CATALOGUE,
@@ -13,7 +13,9 @@ import {
   type TemplateId,
 } from './catalogue';
 import { TRACKS_STOCK, byDestination, perDestination, type DestinationId, type PerDestination } from './destinations';
+import { pending } from './pending';
 import { readStorage, writeStorage } from './safeStorage';
+import { mergeItems, type RemoteChanges } from './syncProtocol';
 
 export const ITEMS_STORAGE_KEY = 'daypack.items';
 // Version 1 stored target and stock as single numbers; they belong to the daycare.
@@ -144,6 +146,23 @@ function parseItem(raw: unknown): Item | null {
     stock: counts(r.stock, 0),
     hidden: r.hidden === true,
   };
+}
+
+// Another device's item, validated like stored data; the id must match so a row can't smuggle in a different one.
+export function parseRemoteItem(id: string, data: unknown): Item | null {
+  const item = parseItem(data);
+  return item?.id === id ? item : null;
+}
+
+// Ids whose value differs between two lists (added, edited or removed); compared by content so
+// operations that rebuild unchanged items don't queue needless writes.
+export function changedItemIds(before: readonly Item[], after: readonly Item[]): string[] {
+  const old = new Map(before.map((item) => [item.id, JSON.stringify(item)]));
+  const kept = new Set(after.map((item) => item.id));
+  return [
+    ...after.filter((item) => old.get(item.id) !== JSON.stringify(item)).map((item) => item.id),
+    ...before.filter((item) => !kept.has(item.id)).map((item) => item.id),
+  ];
 }
 
 // Missing, corrupt or wrong-version storage re-seeds the built-ins; an empty list is a valid user choice.
@@ -362,21 +381,42 @@ export function useItemList(): {
   remove: (id: string) => void;
   include: (id: string) => void;
   setWeather: (template: TemplateId, active: boolean) => void;
+  getItems: () => readonly Item[];
+  applyRemote: (changes: RemoteChanges['items']) => void;
+  replaceAll: (items: readonly Item[]) => void;
 } {
   const [items, setItems] = useState<readonly Item[]>(() => parseItems(readStorage(ITEMS_STORAGE_KEY)));
+  // Edits within one tick must build on each other, so the latest list lives in a ref as well as in state.
+  const latest = useRef(items);
 
   useEffect(() => {
     writeStorage(ITEMS_STORAGE_KEY, serializeItems(items));
   }, [items]);
 
+  const set = (next: readonly Item[]) => {
+    latest.current = next;
+    setItems(next);
+  };
+
+  // Local edits are queued for the household; remote ones (applyRemote, replaceAll) are not, or they would echo back.
+  const edit = (change: (current: readonly Item[]) => Item[]) => {
+    const current = latest.current;
+    const next = change(current);
+    pending.markItems(changedItemIds(current, next));
+    set(next);
+  };
+
   return {
     items,
-    add: (draft) => setItems((current) => addItem(current, draft)),
-    update: (id, patch) => setItems((current) => updateItem(current, id, patch)),
-    setStock: (id, destination, stock) => setItems((current) => setStock(current, id, destination, stock)),
-    hide: (id, hidden) => setItems((current) => setHidden(current, id, hidden)),
-    remove: (id) => setItems((current) => removeItem(current, id)),
-    include: (id) => setItems((current) => includeItem(current, id)),
-    setWeather: (template, active) => setItems((current) => setTemplate(current, template, active)),
+    add: (draft) => edit((current) => addItem(current, draft)),
+    update: (id, patch) => edit((current) => updateItem(current, id, patch)),
+    setStock: (id, destination, stock) => edit((current) => setStock(current, id, destination, stock)),
+    hide: (id, hidden) => edit((current) => setHidden(current, id, hidden)),
+    remove: (id) => edit((current) => removeItem(current, id)),
+    include: (id) => edit((current) => includeItem(current, id)),
+    setWeather: (template, active) => edit((current) => setTemplate(current, template, active)),
+    getItems: () => latest.current,
+    applyRemote: (changes) => set(mergeItems(latest.current, changes, pending.hasItem, parseRemoteItem)),
+    replaceAll: set,
   };
 }

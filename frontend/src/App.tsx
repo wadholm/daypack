@@ -1,11 +1,13 @@
 import { css } from '../styled-system/css';
-import { useState } from 'preact/hooks';
+import { useEffect, useState } from 'preact/hooks';
 import { AddItem } from './components/AddItem';
 import { BottomBar } from './components/BottomBar';
+import { HouseholdSheet } from './components/HouseholdSheet';
 import { ItemEditor } from './components/ItemEditor';
 import { ItemList } from './components/ItemList';
 import { DestinationList } from './components/DestinationList';
 import { DestinationPicker } from './components/DestinationPicker';
+import { JoinPrompt } from './components/JoinPrompt';
 import { ListActions } from './components/ListActions';
 import { StarterLists } from './components/StarterLists';
 import { Progress } from './components/Progress';
@@ -14,6 +16,8 @@ import { ViewSwitch, type View } from './components/ViewSwitch';
 import { useI18n } from './i18n/I18nProvider';
 import { TRACKS_STOCK, useDestination } from './state/destinations';
 import { countPacked, progressPercent, useChecked } from './state/checked';
+import { parseJoinHash } from './state/household';
+import { useSync } from './state/useSync';
 import { destinationItems, editableItems, packItems, useItemList, visibleItems } from './state/items';
 
 // 'new' opens the editor for a fresh custom item; a string is the id being edited.
@@ -66,7 +70,26 @@ export function App() {
   const { t } = useI18n();
   const list = useItemList();
   const { destination, setDestination } = useDestination();
-  const { checked, toggle, forget, reset } = useChecked(destination);
+  const checkedState = useChecked(destination);
+  const { checked, toggle, forget, reset } = checkedState;
+  const sync = useSync({
+    getItems: list.getItems,
+    getChecked: checkedState.getChecked,
+    applyRemote: (changes) => {
+      list.applyRemote(changes.items);
+      checkedState.applyRemote(changes.checked);
+    },
+    replaceAll: (items, state) => {
+      list.replaceAll(items);
+      checkedState.replaceAll(state);
+    },
+  });
+  const [householdOpen, setHouseholdOpen] = useState(false);
+  // An invite link opens the app with the code in the fragment; it is dropped from the address once read.
+  const [invite, setInvite] = useState<string | null>(() => parseJoinHash(location.hash));
+  useEffect(() => {
+    if (invite !== null) history.replaceState(null, '', location.pathname + location.search);
+  }, []);
   const [view, setView] = useState<View>('pack');
   const [editing, setEditing] = useState(false);
   // Ids on the list when editing began; see editableItems.
@@ -91,7 +114,7 @@ export function App() {
     <div class={pageStyle}>
       <div class={glowStyle} aria-hidden="true" />
       <div class={contentStyle}>
-        <TopBar />
+        <TopBar shared={sync.connected} onHousehold={() => setHouseholdOpen(true)} />
         <header class={headerStyle}>
           <div class={dateRowStyle}>
             <span class={dateStyle}>{formatToday(t('dateLocale'))}</span>
@@ -133,6 +156,17 @@ export function App() {
         <BottomBar
           label={editing ? t('done') : t('reset')}
           onPress={editing ? () => setEditing(false) : reset}
+        />
+      )}
+      {householdOpen && <HouseholdSheet sync={sync} onClose={() => setHouseholdOpen(false)} />}
+      {invite !== null && (
+        <JoinPrompt
+          onJoin={async () => {
+            if (sync.connected) await sync.leave();
+            const outcome = await sync.join(invite);
+            return outcome === 'joined' ? null : outcome;
+          }}
+          onClose={() => setInvite(null)}
         />
       )}
       {adding && (
