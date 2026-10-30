@@ -8,6 +8,7 @@ import type { IconId } from '../icons/iconIds';
 import { CATEGORY_KEYS } from '../i18n/categoryKeys';
 import { HuePicker, IconPicker } from './Pickers';
 import { iconProps } from '../icons/svgProps';
+import { DESTINATION_KEYS, perDestination, type DestinationId, type PerDestination } from '../state/destinations';
 import { Stepper } from './Stepper';
 import {
   actionsStyle,
@@ -85,6 +86,8 @@ const noteInputStyle = css({ minHeight: 'noteField', paddingBlock: '3', resize: 
 interface ItemEditorProps {
   // null opens the editor for a brand-new custom item.
   item: Item | null;
+  // The destination the amount is edited for; the others keep their value.
+  destination: DestinationId;
   // Prefills the name when the editor was opened from a search with no match.
   initialLabel?: string;
   onSave: (draft: ItemDraft) => void;
@@ -93,7 +96,7 @@ interface ItemEditorProps {
   onClose: () => void;
 }
 
-export function ItemEditor({ item, initialLabel = '', onSave, onHide, onDelete, onClose }: ItemEditorProps) {
+export function ItemEditor({ item, destination, initialLabel = '', onSave, onHide, onDelete, onClose }: ItemEditorProps) {
   const { t } = useI18n();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [label, setLabel] = useState(item ? (item.label ?? '') : initialLabel);
@@ -101,7 +104,7 @@ export function ItemEditor({ item, initialLabel = '', onSave, onHide, onDelete, 
   const [icon, setIcon] = useState<IconId>(item?.icon ?? 'star');
   const [category, setCategory] = useState<Category>(item ? categoryOf(item) : 'other');
   const [note, setNote] = useState(item?.note ?? '');
-  const [target, setTarget] = useState(item?.target ?? 1);
+  const [target, setTarget] = useState<PerDestination>(item?.target ?? perDestination(1));
   const [daily, setDaily] = useState(item?.daily ?? false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
@@ -109,6 +112,7 @@ export function ItemEditor({ item, initialLabel = '', onSave, onHide, onDelete, 
     dialogRef.current?.showModal();
   }, []);
 
+  const targetLabel = t('targetField', { place: t(DESTINATION_KEYS[destination]) });
   const builtin = item?.builtin ?? false;
   const canSave = builtin || label.trim() !== '';
 
@@ -180,14 +184,14 @@ export function ItemEditor({ item, initialLabel = '', onSave, onHide, onDelete, 
         </label>
 
         <div class={amountRowStyle}>
-          <span class={fieldLabelStyle}>{t('targetField')}</span>
+          <span class={fieldLabelStyle}>{targetLabel}</span>
           <Stepper
-            value={target}
-            min={1}
+            value={target[destination]}
+            min={0}
             max={MAX_COUNT}
-            decreaseLabel={t('fewerLabel', { name: t('targetField') })}
-            increaseLabel={t('moreLabel', { name: t('targetField') })}
-            onChange={setTarget}
+            decreaseLabel={t('fewerLabel', { name: targetLabel })}
+            increaseLabel={t('moreLabel', { name: targetLabel })}
+            onChange={(value) => setTarget({ ...target, [destination]: value })}
           />
         </div>
 

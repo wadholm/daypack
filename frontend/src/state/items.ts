@@ -12,10 +12,12 @@ import {
   type Category,
   type TemplateId,
 } from './catalogue';
+import { byDestination, perDestination, type DestinationId, type PerDestination } from './destinations';
 import { readStorage, writeStorage } from './safeStorage';
 
 export const ITEMS_STORAGE_KEY = 'daypack.items';
-const STORAGE_VERSION = 1;
+// Version 1 stored target and stock as single numbers; they belong to the daycare.
+const STORAGE_VERSION = 2;
 
 export const HUES = ['yellow', 'sky', 'pink', 'mint', 'peach', 'lavender', 'sea'] as const;
 export type Hue = (typeof HUES)[number];
@@ -31,8 +33,9 @@ export interface Item {
   category: Category | null;
   note: string;
   daily: boolean;
-  target: number;
-  stock: number;
+  // A target of 0 means the destination keeps its own and nothing is packed for it.
+  target: PerDestination;
+  stock: PerDestination;
   hidden: boolean;
 }
 
@@ -42,7 +45,7 @@ export interface ItemDraft {
   icon: IconId;
   category: Category;
   note: string;
-  target: number;
+  target: PerDestination;
   daily: boolean;
 }
 
@@ -65,8 +68,8 @@ function baseItem(
     category,
     note: '',
     daily: false,
-    target: 1,
-    stock: 0,
+    target: perDestination(1),
+    stock: perDestination(0),
     hidden: false,
   };
 }
@@ -77,7 +80,7 @@ function catalogueItem(id: string): Item | null {
     ? {
         ...baseItem(entry.id, true, null, entry.hue, entry.icon, entry.category),
         daily: DAILY_IDS.includes(id),
-        target: DEFAULT_TARGETS[id] ?? 1,
+        target: perDestination(DEFAULT_TARGETS[id] ?? 1),
       }
     : null;
 }
@@ -98,6 +101,19 @@ function count(value: unknown, fallback: number): number {
 
 export function clampCount(value: number, min = 0): number {
   return Math.min(Math.max(Math.round(value), min), MAX_COUNT);
+}
+
+// Version 2 stores one number per destination; a version 1 number becomes the daycare's.
+function counts(value: unknown, fallback: number): PerDestination {
+  const result = perDestination(fallback);
+  if (typeof value === 'number') return { ...result, daycare: count(value, fallback) };
+  if (typeof value !== 'object' || value === null) return result;
+  const record = value as Record<string, unknown>;
+  return byDestination((id) => count(record[id], fallback));
+}
+
+function clampCounts(values: PerDestination): PerDestination {
+  return byDestination((id) => clampCount(values[id]));
 }
 
 function parseItem(raw: unknown): Item | null {
@@ -124,9 +140,8 @@ function parseItem(raw: unknown): Item | null {
     category: isCategory(r.category) ? r.category : (builtin?.category ?? null),
     note: typeof r.note === 'string' ? r.note : '',
     daily: typeof r.daily === 'boolean' ? r.daily : (builtin !== undefined && DAILY_IDS.includes(r.id)),
-    // A target of 0 would mean "never wanted"; hide the item instead.
-    target: Math.max(count(r.target, DEFAULT_TARGETS[r.id] ?? 1), 1),
-    stock: count(r.stock, 0),
+    target: counts(r.target, DEFAULT_TARGETS[r.id] ?? 1),
+    stock: counts(r.stock, 0),
     hidden: r.hidden === true,
   };
 }
@@ -138,7 +153,7 @@ export function parseItems(raw: string | null): Item[] {
     const parsed: unknown = JSON.parse(raw);
     if (typeof parsed !== 'object' || parsed === null) return defaultItems();
     const { version, items } = parsed as { version?: unknown; items?: unknown };
-    if (version !== STORAGE_VERSION || !Array.isArray(items)) return defaultItems();
+    if ((version !== 1 && version !== STORAGE_VERSION) || !Array.isArray(items)) return defaultItems();
 
     const seen = new Set<string>();
     const result: Item[] = [];
@@ -191,7 +206,7 @@ export function addItem(items: readonly Item[], draft: ItemDraft): Item[] {
   const item = {
     ...baseItem(uniqueId(label, items), false, label, draft.hue, draft.icon, draft.category),
     note: draft.note,
-    target: clampCount(draft.target, 1),
+    target: clampCounts(draft.target),
     daily: draft.daily,
   };
   return [...items, item];
@@ -200,22 +215,24 @@ export function addItem(items: readonly Item[], draft: ItemDraft): Item[] {
 export type ItemPatch = Partial<Pick<Item, 'hue' | 'icon' | 'note' | 'daily'>> & {
   label?: string;
   category?: Category;
-  target?: number;
+  target?: PerDestination;
 };
 
 export function updateItem(items: readonly Item[], id: string, patch: ItemPatch): Item[] {
   return items.map((item) => {
     if (item.id !== id) return item;
     const { label, target, ...rest } = patch;
-    const next = { ...item, ...rest, ...(target === undefined ? {} : { target: clampCount(target, 1) }) };
+    const next = { ...item, ...rest, ...(target === undefined ? {} : { target: clampCounts(target) }) };
     if (item.builtin || label === undefined) return next;
     const trimmed = label.trim();
     return trimmed === '' ? next : { ...next, label: trimmed };
   });
 }
 
-export function setStock(items: readonly Item[], id: string, stock: number): Item[] {
-  return items.map((item) => (item.id === id ? { ...item, stock: clampCount(stock) } : item));
+export function setStock(items: readonly Item[], id: string, destination: DestinationId, stock: number): Item[] {
+  return items.map((item) =>
+    item.id === id ? { ...item, stock: { ...item.stock, [destination]: clampCount(stock) } } : item,
+  );
 }
 
 export function setHidden(items: readonly Item[], id: string, hidden: boolean): Item[] {
@@ -252,19 +269,20 @@ export function visibleItems(items: readonly Item[]): Item[] {
   return items.filter((item) => !item.hidden);
 }
 
-// How many to put in the bag: daily items always bring their full amount, the rest only top up the daycare stock.
-export function packQuantity(item: Item): number {
-  return item.daily ? item.target : Math.max(0, item.target - item.stock);
+// How many to put in the bag: daily items always bring their full amount, the rest only top up what is already there.
+export function packQuantity(item: Item, destination: DestinationId): number {
+  const target = item.target[destination];
+  return item.daily ? target : Math.max(0, target - item.stock[destination]);
 }
 
-// Ticking an item never touches the stock; stock only changes in the At daycare view.
-export function packItems(items: readonly Item[]): Item[] {
-  return visibleItems(items).filter((item) => packQuantity(item) > 0);
+// Ticking an item never touches the stock; stock only changes in the At view.
+export function packItems(items: readonly Item[], destination: DestinationId): Item[] {
+  return visibleItems(items).filter((item) => packQuantity(item, destination) > 0);
 }
 
-// Daily items are left out: their stock is not tracked.
-export function daycareItems(items: readonly Item[]): Item[] {
-  return visibleItems(items).filter((item) => !item.daily);
+// Daily items are left out (their stock is not tracked), and so is anything the destination keeps itself.
+export function destinationItems(items: readonly Item[], destination: DestinationId): Item[] {
+  return visibleItems(items).filter((item) => !item.daily && item.target[destination] > 0);
 }
 
 export function hiddenItems(items: readonly Item[]): Item[] {
@@ -338,7 +356,7 @@ export function useItemList(): {
   items: readonly Item[];
   add: (draft: ItemDraft) => void;
   update: (id: string, patch: ItemPatch) => void;
-  setStock: (id: string, stock: number) => void;
+  setStock: (id: string, destination: DestinationId, stock: number) => void;
   hide: (id: string, hidden: boolean) => void;
   remove: (id: string) => void;
   include: (id: string) => void;
@@ -354,7 +372,7 @@ export function useItemList(): {
     items,
     add: (draft) => setItems((current) => addItem(current, draft)),
     update: (id, patch) => setItems((current) => updateItem(current, id, patch)),
-    setStock: (id, stock) => setItems((current) => setStock(current, id, stock)),
+    setStock: (id, destination, stock) => setItems((current) => setStock(current, id, destination, stock)),
     hide: (id, hidden) => setItems((current) => setHidden(current, id, hidden)),
     remove: (id) => setItems((current) => removeItem(current, id)),
     include: (id) => setItems((current) => includeItem(current, id)),

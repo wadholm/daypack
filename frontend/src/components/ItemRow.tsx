@@ -3,7 +3,7 @@ import { useI18n } from '../i18n/I18nProvider';
 import { itemLabel } from '../i18n/itemLabel';
 import { ItemIcon } from '../icons/ItemIcon';
 import { iconProps } from '../icons/svgProps';
-import { packQuantity, type Item } from '../state/items';
+import type { Item } from '../state/items';
 import { checkHue, tileHue } from './hueStyles';
 import { editRowStyle, labelStyle, noteStyle, rowStyle, textStyle, tileStyle } from './rowStyles';
 
@@ -59,6 +59,8 @@ const hideIconStyle = css({ width: 'icon', height: 'icon' });
 
 interface ItemRowProps {
   item: Item;
+  // How many to bring; shown when more than one.
+  quantity: number;
   checked: boolean;
   editing: boolean;
   onToggle: (id: string) => void;
@@ -67,10 +69,9 @@ interface ItemRowProps {
 }
 
 // In pack mode a tap ticks the item; in edit mode the same row opens the editor instead.
-export function ItemRow({ item, checked, editing, onToggle, onEdit, onSetHidden }: ItemRowProps) {
+export function ItemRow({ item, quantity, checked, editing, onToggle, onEdit, onSetHidden }: ItemRowProps) {
   const { t } = useI18n();
   const label = itemLabel(item, t);
-  const quantity = packQuantity(item);
 
   const content = (
     <>

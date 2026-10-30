@@ -1,5 +1,6 @@
 import { css, cx } from '../../styled-system/css';
 import { CATEGORY_KEYS } from '../i18n/categoryKeys';
+import { VIEW_AT_KEYS, type DestinationId } from '../state/destinations';
 import { useI18n } from '../i18n/I18nProvider';
 import { itemLabel } from '../i18n/itemLabel';
 import { ItemIcon } from '../icons/ItemIcon';
@@ -42,18 +43,19 @@ const rowStyle = css({
   },
 });
 
-interface DaycareListProps {
+interface DestinationListProps {
   items: readonly Item[];
+  destination: DestinationId;
   onSetStock: (id: string, stock: number) => void;
 }
 
-// What is at daycare right now. The Pack view works out what to bring from this and each item's target.
-export function DaycareList({ items, onSetStock }: DaycareListProps) {
+// What is at the chosen destination right now. The Pack view works out what to bring from this and each item's target.
+export function DestinationList({ items, destination, onSetStock }: DestinationListProps) {
   const { t } = useI18n();
 
   return (
-    <div class={cardStyle} role="group" aria-label={t('viewDaycare')}>
-      {items.length === 0 && <p class={emptyStyle}>{t('daycareEmpty')}</p>}
+    <div class={cardStyle} role="group" aria-label={t(VIEW_AT_KEYS[destination])}>
+      {items.length === 0 && <p class={emptyStyle}>{t('destinationEmpty')}</p>}
       {groupByCategory(items).map((group) => (
         <section key={group.category}>
           <h2 class={headingStyle}>{t(CATEGORY_KEYS[group.category])}</h2>
@@ -66,10 +68,10 @@ export function DaycareList({ items, onSetStock }: DaycareListProps) {
                 </span>
                 <span class={textStyle}>
                   <span class={labelStyle}>{label}</span>
-                  <span class={noteStyle}>{t('wantedCount', { count: item.target })}</span>
+                  <span class={noteStyle}>{t('wantedCount', { count: item.target[destination] })}</span>
                 </span>
                 <Stepper
-                  value={item.stock}
+                  value={item.stock[destination]}
                   min={0}
                   max={MAX_COUNT}
                   decreaseLabel={t('fewerLabel', { name: label })}
