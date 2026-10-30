@@ -3,7 +3,7 @@ import { useI18n } from '../i18n/I18nProvider';
 import { itemLabel } from '../i18n/itemLabel';
 import { ItemIcon } from '../icons/ItemIcon';
 import { iconProps } from '../icons/svgProps';
-import type { Item } from '../state/items';
+import { packQuantity, type Item } from '../state/items';
 import { checkHue, tileHue } from './hueStyles';
 import { editRowStyle, labelStyle, noteStyle, rowStyle, textStyle, tileStyle } from './rowStyles';
 
@@ -51,6 +51,8 @@ const hideButtonStyle = css({
 
 const editIconStyle = css({ width: 'icon', height: 'icon', flexShrink: 0, color: 'textMuted' });
 
+const quantityStyle = css({ color: 'textMuted', fontWeight: 'bold' });
+
 const dimmedStyle = css({ opacity: 'dimmed' });
 
 const hideIconStyle = css({ width: 'icon', height: 'icon' });
@@ -68,6 +70,7 @@ interface ItemRowProps {
 export function ItemRow({ item, checked, editing, onToggle, onEdit, onSetHidden }: ItemRowProps) {
   const { t } = useI18n();
   const label = itemLabel(item, t);
+  const quantity = packQuantity(item);
 
   const content = (
     <>
@@ -75,7 +78,10 @@ export function ItemRow({ item, checked, editing, onToggle, onEdit, onSetHidden 
         <ItemIcon id={item.icon} />
       </span>
       <span class={textStyle}>
-        <span class={labelStyle}>{label}</span>
+        <span class={labelStyle}>
+          {label}
+          {!editing && quantity > 1 && <span class={quantityStyle}> ×{quantity}</span>}
+        </span>
         {item.note !== '' && <span class={noteStyle}>{item.note}</span>}
       </span>
     </>

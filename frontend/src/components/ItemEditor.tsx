@@ -3,10 +3,12 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { useI18n } from '../i18n/I18nProvider';
 import { itemLabel } from '../i18n/itemLabel';
 import { CATEGORIES, type Category } from '../state/catalogue';
-import { canDelete, categoryOf, type Hue, type Item, type ItemDraft } from '../state/items';
+import { MAX_COUNT, canDelete, categoryOf, type Hue, type Item, type ItemDraft } from '../state/items';
 import type { IconId } from '../icons/iconIds';
 import { CATEGORY_KEYS } from '../i18n/categoryKeys';
 import { HuePicker, IconPicker } from './Pickers';
+import { iconProps } from '../icons/svgProps';
+import { Stepper } from './Stepper';
 import {
   actionsStyle,
   buttonStyle,
@@ -21,6 +23,62 @@ import {
 const fieldStyle = css({ display: 'flex', flexDirection: 'column', gap: '2', border: 'none', padding: '0', margin: '0' });
 
 const fieldLabelStyle = css({ fontSize: 'meta', fontWeight: 'bold', color: 'textMuted', padding: '0' });
+
+const toggleStyle = css({
+  position: 'relative',
+  display: 'flex',
+  alignItems: 'center',
+  gap: '3',
+  minHeight: 'tapTarget',
+  fontSize: 'label',
+  fontWeight: 'semibold',
+});
+
+// The real input stays focusable but invisible; the box beside it is what the user sees, matching the list checkboxes.
+const checkboxInputStyle = css({
+  position: 'absolute',
+  width: 'checkbox',
+  height: 'checkbox',
+  margin: '0',
+  overflow: 'hidden',
+  clipPath: 'inset(50%)',
+});
+
+const checkboxBoxStyle = css({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  flexShrink: 0,
+  width: 'checkbox',
+  height: 'checkbox',
+  borderRadius: 'full',
+  borderWidth: 'check',
+  borderStyle: 'solid',
+  borderColor: 'brand',
+  color: 'onBrand',
+  'input:checked + &': { bg: 'brand' },
+  'input:focus-visible + &': { outlineWidth: 'check', outlineStyle: 'solid', outlineColor: 'brand', outlineOffset: '1' },
+});
+
+const tickStyle = css({ width: 'tickGlyph', height: 'tickGlyph' });
+
+const selectWrapStyle = css({ position: 'relative', display: 'flex', flexDirection: 'column' });
+
+const selectStyle = css({ appearance: 'none', paddingInlineEnd: '8' });
+
+const chevronStyle = css({
+  position: 'absolute',
+  insetInlineEnd: '4',
+  top: '0',
+  bottom: '0',
+  width: 'icon',
+  height: 'icon',
+  marginBlock: 'auto',
+  color: 'textMuted',
+  pointerEvents: 'none',
+});
+
+const amountRowStyle = css({ display: 'flex', alignItems: 'center', justifyContent: 'space-between' });
 
 const noteInputStyle = css({ minHeight: 'noteField', paddingBlock: '3', resize: 'none' });
 
@@ -43,6 +101,8 @@ export function ItemEditor({ item, initialLabel = '', onSave, onHide, onDelete, 
   const [icon, setIcon] = useState<IconId>(item?.icon ?? 'star');
   const [category, setCategory] = useState<Category>(item ? categoryOf(item) : 'other');
   const [note, setNote] = useState(item?.note ?? '');
+  const [target, setTarget] = useState(item?.target ?? 1);
+  const [daily, setDaily] = useState(item?.daily ?? false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   useEffect(() => {
@@ -70,7 +130,7 @@ export function ItemEditor({ item, initialLabel = '', onSave, onHide, onDelete, 
         class={formStyle}
         onSubmit={(event) => {
           event.preventDefault();
-          if (canSave) onSave({ label, hue, icon, category, note });
+          if (canSave) onSave({ label, hue, icon, category, note, target, daily });
         }}
       >
         <h2 class={headingStyle}>{item && builtin ? itemLabel(item, t) : item ? t('editItem') : t('newItem')}</h2>
@@ -101,17 +161,51 @@ export function ItemEditor({ item, initialLabel = '', onSave, onHide, onDelete, 
 
         <label class={fieldStyle}>
           <span class={fieldLabelStyle}>{t('categoryField')}</span>
-          <select
-            class={inputStyle}
-            value={category}
-            onChange={(event) => setCategory(event.currentTarget.value as Category)}
-          >
-            {CATEGORIES.map((value) => (
-              <option key={value} value={value}>
-                {t(CATEGORY_KEYS[value])}
-              </option>
-            ))}
-          </select>
+          <span class={selectWrapStyle}>
+            <select
+              class={cx(inputStyle, selectStyle)}
+              value={category}
+              onChange={(event) => setCategory(event.currentTarget.value as Category)}
+            >
+              {CATEGORIES.map((value) => (
+                <option key={value} value={value}>
+                  {t(CATEGORY_KEYS[value])}
+                </option>
+              ))}
+            </select>
+            <svg {...iconProps} stroke-width={2.4} class={chevronStyle} aria-hidden="true">
+              <path d="M6 9l6 6 6-6" />
+            </svg>
+          </span>
+        </label>
+
+        <div class={amountRowStyle}>
+          <span class={fieldLabelStyle}>{t('targetField')}</span>
+          <Stepper
+            value={target}
+            min={1}
+            max={MAX_COUNT}
+            decreaseLabel={t('fewerLabel', { name: t('targetField') })}
+            increaseLabel={t('moreLabel', { name: t('targetField') })}
+            onChange={setTarget}
+          />
+        </div>
+
+        <label class={toggleStyle}>
+          <input
+            class={checkboxInputStyle}
+            type="checkbox"
+            checked={daily}
+            onChange={(event) => setDaily(event.currentTarget.checked)}
+          />
+          <span class={checkboxBoxStyle} aria-hidden="true">
+            {daily && (
+              <svg {...iconProps} stroke-width={3} class={tickStyle}>
+                <path d="M5 12.5l4.5 4.5L19 7.5" />
+              </svg>
+            )}
+          </span>
+          {t('dailyField')}
         </label>
 
         <label class={fieldStyle}>

@@ -25,6 +25,11 @@ import {
   setTemplate,
   templateActive,
   templateState,
+  clampCount,
+  daycareItems,
+  packItems,
+  packQuantity,
+  setStock,
 } from './items';
 
 const seed = defaultItems();
@@ -64,7 +69,7 @@ describe('parseItems', () => {
   });
 
   it('round-trips through serializeItems', () => {
-    const items = addItem(seed, { label: 'Snack box', hue: 'mint', icon: 'snack', category: 'feeding', note: 'No nuts' });
+    const items = addItem(seed, { label: 'Snack box', hue: 'mint', icon: 'snack', category: 'feeding', note: 'No nuts', target: 1, daily: false });
     expect(parseItems(serializeItems(items))).toEqual(items);
   });
 
@@ -135,7 +140,7 @@ describe('slugify and uniqueId', () => {
 
 describe('addItem', () => {
   it('appends a custom item with a generated id and carried defaults', () => {
-    const items = addItem(seed, { label: '  Rattle ', hue: 'sea', icon: 'blanket', category: 'other', note: '' });
+    const items = addItem(seed, { label: '  Rattle ', hue: 'sea', icon: 'blanket', category: 'other', note: '', target: 1, daily: false });
     expect(items).toHaveLength(6);
     expect(items[5]).toEqual({
       id: 'rattle',
@@ -154,14 +159,14 @@ describe('addItem', () => {
 
   it('does not mutate the input', () => {
     const before = [...seed];
-    addItem(seed, { label: 'Rattle', hue: 'sea', icon: 'blanket', category: 'other', note: '' });
+    addItem(seed, { label: 'Rattle', hue: 'sea', icon: 'blanket', category: 'other', note: '', target: 1, daily: false });
     expect(seed).toEqual(before);
   });
 });
 
 describe('updateItem', () => {
   it('patches editable fields and keeps the id stable even when the label changes', () => {
-    const items = addItem(seed, { label: 'Rattle', hue: 'sea', icon: 'blanket', category: 'other', note: '' });
+    const items = addItem(seed, { label: 'Rattle', hue: 'sea', icon: 'blanket', category: 'other', note: '', target: 1, daily: false });
     const next = updateItem(items, 'rattle', { label: 'Beach rattle', note: 'Blue one' });
     const rattle = next.find((item) => item.id === 'rattle');
     expect(rattle).toMatchObject({ id: 'rattle', label: 'Beach rattle', note: 'Blue one' });
@@ -173,7 +178,7 @@ describe('updateItem', () => {
   });
 
   it('ignores a blank label on a custom item', () => {
-    const items = addItem(seed, { label: 'Rattle', hue: 'sea', icon: 'blanket', category: 'other', note: '' });
+    const items = addItem(seed, { label: 'Rattle', hue: 'sea', icon: 'blanket', category: 'other', note: '', target: 1, daily: false });
     expect(updateItem(items, 'rattle', { label: '   ' })).toEqual(items);
   });
 });
@@ -187,7 +192,7 @@ describe('hide, unhide and remove', () => {
   });
 
   it('removes a custom item', () => {
-    const items = addItem(seed, { label: 'Rattle', hue: 'sea', icon: 'blanket', category: 'other', note: '' });
+    const items = addItem(seed, { label: 'Rattle', hue: 'sea', icon: 'blanket', category: 'other', note: '', target: 1, daily: false });
     expect(removeItem(items, 'rattle')).toEqual(seed);
   });
 
@@ -365,7 +370,7 @@ describe('weather templates', () => {
   });
 
   it('reserves catalogue ids so a custom item never shadows a template item', () => {
-    const custom = addItem(seed, { label: 'Towel', hue: 'sea', icon: 'star', category: 'other', note: '' });
+    const custom = addItem(seed, { label: 'Towel', hue: 'sea', icon: 'star', category: 'other', note: '', target: 1, daily: false });
     expect(custom.at(-1)?.id).toBe('towel-2');
     expect(templateActive(setTemplate(custom, 'swim', true), 'swim')).toBe(true);
   });
@@ -396,5 +401,62 @@ describe('migration of existing checked state', () => {
     const ids = visibleItems(items).map((item) => item.id);
     expect(countPacked(ids, new Set(['diapers', 'socks']))).toBe(1);
     expect(ids).toHaveLength(4);
+  });
+});
+
+describe('daycare stock', () => {
+  const byId = (items: readonly Item[], id: string) => items.find((item) => item.id === id)!;
+
+  it('flags the pacifier and water bottle as daily on a fresh install only', () => {
+    expect(seed.filter((item) => item.daily).map((item) => item.id)).toEqual(['pacifier', 'water-bottle']);
+    const old = parseItems(stored([{ id: 'pacifier', builtin: true, daily: false }]));
+    expect(old[0]?.daily).toBe(false);
+    const unset = parseItems(stored([{ id: 'pacifier', builtin: true }]));
+    expect(unset[0]?.daily).toBe(true);
+  });
+
+  it('wants five diapers and three socks at daycare by default', () => {
+    expect(byId(seed, 'diapers').target).toBe(5);
+    expect(byId(seed, 'socks').target).toBe(3);
+    expect(byId(setStock(seed, 'diapers', 2), 'diapers')).toMatchObject({ target: 5, stock: 2 });
+    expect(packQuantity(byId(setStock(seed, 'diapers', 2), 'diapers'))).toBe(3);
+  });
+
+  it('packs target minus stock, never below zero', () => {
+    const socks = { ...byId(seed, 'socks'), target: 3, stock: 1 };
+    expect(packQuantity(socks)).toBe(2);
+    expect(packQuantity({ ...socks, stock: 5 })).toBe(0);
+  });
+
+  it('always packs daily items in full, whatever the stock', () => {
+    const bottle = { ...byId(seed, 'water-bottle'), target: 2, stock: 2 };
+    expect(packQuantity(bottle)).toBe(2);
+  });
+
+  it('drops covered and hidden items from the pack list and daily ones from the daycare list', () => {
+    let items = setStock(seed, 'socks', 3);
+    items = setHidden(items, 'cuddly-toy', true);
+    expect(packItems(items).map((item) => item.id)).toEqual(['diapers', 'pacifier', 'water-bottle']);
+    expect(daycareItems(items).map((item) => item.id)).toEqual(['diapers', 'socks']);
+  });
+
+  it('brings an item back when its target rises above the stock', () => {
+    const covered = setStock(seed, 'socks', 3);
+    expect(packItems(covered).some((item) => item.id === 'socks')).toBe(false);
+    const raised = updateItem(covered, 'socks', { target: 4 });
+    expect(packItems(raised).some((item) => item.id === 'socks')).toBe(true);
+  });
+
+  it('keeps stock and target in range', () => {
+    expect(clampCount(-4)).toBe(0);
+    expect(clampCount(400)).toBe(99);
+    expect(byId(setStock(seed, 'socks', 150), 'socks').stock).toBe(99);
+    expect(byId(updateItem(seed, 'socks', { target: 0 }), 'socks').target).toBe(1);
+    expect(parseItems(stored([{ id: 'socks', builtin: true, target: 0 }]))[0]?.target).toBe(1);
+  });
+
+  it('carries target and daily into a new custom item', () => {
+    const items = addItem(seed, { label: 'Rattle', hue: 'sea', icon: 'star', category: 'other', note: '', target: 2, daily: true });
+    expect(byId(items, 'rattle')).toMatchObject({ target: 2, daily: true, stock: 0 });
   });
 });

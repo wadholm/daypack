@@ -40,7 +40,7 @@ export const CATALOGUE: readonly CatalogueEntry[] = [
   { id: 'travel-cot', hue: 'sea', icon: 'blanket', category: 'sleep', labelKey: 'item_travel-cot' },
   { id: 'cot-sheet', hue: 'sky', icon: 'blanket', category: 'sleep', labelKey: 'item_cot-sheet' },
   { id: 'sleeping-bag', hue: 'lavender', icon: 'blanket', category: 'sleep', labelKey: 'item_sleeping-bag' },
-  { id: 'blanket', hue: 'pink', icon: 'blanket', category: 'sleep', labelKey: 'item_blanket' },
+  { id: 'blanket', hue: 'pink', icon: 'blanket', category: 'outing', labelKey: 'item_blanket' },
   { id: 'night-light', hue: 'yellow', icon: 'star', category: 'sleep', labelKey: 'item_night-light' },
   { id: 'bedtime-books', hue: 'peach', icon: 'book', category: 'sleep', labelKey: 'item_bedtime-books' },
   { id: 'wet-wipes', hue: 'sky', icon: 'diapers', category: 'hygiene', labelKey: 'item_wet-wipes' },
@@ -56,8 +56,8 @@ export const CATALOGUE: readonly CatalogueEntry[] = [
   { id: 'bib', hue: 'pink', icon: 'snack', category: 'feeding', labelKey: 'item_bib' },
   { id: 'rain-gear', hue: 'lavender', icon: 'rain-gear', category: 'weather', labelKey: 'item_rain-gear' },
   { id: 'rubber-boots', hue: 'sea', icon: 'shoe', category: 'weather', labelKey: 'item_rubber-boots' },
-  { id: 'warm-hat', hue: 'lavender', icon: 'beanie', category: 'weather', labelKey: 'item_warm-hat' },
-  { id: 'sun-hat', hue: 'peach', icon: 'sun-hat', category: 'weather', labelKey: 'item_sun-hat' },
+  { id: 'warm-hat', hue: 'lavender', icon: 'beanie', category: 'clothing', labelKey: 'item_warm-hat' },
+  { id: 'sun-hat', hue: 'peach', icon: 'sun-hat', category: 'clothing', labelKey: 'item_sun-hat' },
   { id: 'sunscreen', hue: 'yellow', icon: 'sun-hat', category: 'weather', labelKey: 'item_sunscreen' },
   { id: 'sunglasses', hue: 'sky', icon: 'star', category: 'weather', labelKey: 'item_sunglasses' },
   { id: 'pushchair', hue: 'sea', icon: 'star', category: 'outing', labelKey: 'item_pushchair' },
@@ -81,6 +81,12 @@ export function catalogueEntry(id: string): CatalogueEntry | undefined {
 // the sun hat arrive with their starter list instead of cluttering every day.
 export const SEED_IDS: readonly string[] = ['diapers', 'pacifier', 'cuddly-toy', 'socks', 'water-bottle'];
 
+// Packed every day whatever the daycare stock says: a pacifier or bottle comes home each evening.
+export const DAILY_IDS: readonly string[] = ['pacifier', 'water-bottle'];
+
+// How many a daycare wants on hand; everything else defaults to one.
+export const DEFAULT_TARGETS: Readonly<Record<string, number>> = { diapers: 5, socks: 3 };
+
 // Each template owns its items and none overlap, so switching one off never hides what another needs.
 // Everyday items (diapers, socks, water bottle) stay out of every template for the same reason.
 export const TEMPLATE_ITEM_IDS: Record<TemplateId, readonly string[]> = {
@@ -88,10 +94,10 @@ export const TEMPLATE_ITEM_IDS: Record<TemplateId, readonly string[]> = {
   cold: ['sweater', 'pants', 'warm-hat', 'mittens', 'winter-overalls'],
   rain: ['rain-gear', 'rubber-boots', 'rain-cover'],
   overnight: [
-    'travel-cot', 'cot-sheet', 'sleeping-bag', 'blanket', 'night-light', 'bedtime-books', 'pyjamas', 'bodysuits',
+    'travel-cot', 'cot-sheet', 'sleeping-bag', 'night-light', 'bedtime-books', 'pyjamas', 'bodysuits',
     'toiletry-bag', 'washcloths', 'toothbrush', 'wet-wipes',
     'formula', 'baby-bottles', 'food-pouches', 'snack', 'spoons', 'bib',
   ],
-  outing: ['pushchair', 'mosquito-net', 'uv-curtain', 'baby-carrier'],
+  outing: ['pushchair', 'blanket', 'mosquito-net', 'uv-curtain', 'baby-carrier'],
   swim: ['swim-trunks', 'swim-diaper', 'bathrobe', 'towel'],
 };

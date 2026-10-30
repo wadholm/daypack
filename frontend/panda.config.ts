@@ -119,6 +119,7 @@ export default defineConfig({
         chip: { value: '32px' },
         segment: { value: '42px' },
         row: { value: '56px' },
+        stepperValue: { value: '28px' },
         iconTile: { value: '38px' },
         checkbox: { value: '30px' },
         progress: { value: '10px' },
